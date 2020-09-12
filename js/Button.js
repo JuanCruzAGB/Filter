@@ -12,7 +12,7 @@ export class Button{
      */
     constructor(properties = {
         id: 'filter-id',
-    },html = null, rule = null){
+    }, html = null, rule = null){
         this.setHTML(html, properties);
         this.setType(rule);
         this.setProperties(properties);
