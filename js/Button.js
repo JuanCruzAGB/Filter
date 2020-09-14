@@ -161,7 +161,7 @@ export class Button{
         let btn = this;
         this.html.addEventListener('click', function(e){
             let click = true;
-            if(this.dataset.filter.split(',')){
+            if(this.dataset.filter && this.dataset.filter.split(',')){
                 let filtersId = this.dataset.filter.split(',');
                 for(const key in filtersId){
                     if(filtersId.hasOwnProperty(key)){

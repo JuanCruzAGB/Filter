@@ -215,8 +215,8 @@ export class Rule{
                         }
                         break;
                     default:
-                        if(btn.properties.value){
-                            this.properties.value = btn.properties.value;
+                        if(btn.html.value){
+                            this.properties.value = btn.html.value;
                         }else{
                             this.properties.value = undefined;
                         }

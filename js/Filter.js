@@ -231,8 +231,12 @@ export class Filter{
                 let aValue = a[order.by],
                     bValue = b[order.by];
                 if(typeof aValue == 'string'){
-                    aValue = aValue.toUpperCase();
-                    bValue = bValue.toUpperCase();
+                    if(aValue){
+                        aValue = aValue.toUpperCase();
+                    }
+                    if(bValue){
+                        bValue = bValue.toUpperCase();
+                    }
                 }
                 if(aValue < bValue){
                     return -1;
@@ -284,10 +288,10 @@ export class Filter{
      * @memberof Filter
      */
     next(){
-        if(Math.ceil(this.filteredData.length / this.properties.limit) >= this.currentPage){
+        if(this.currentPage < Math.ceil(this.filteredData.length / this.properties.limit)){
             this.currentPage++;
             let thereIsNext = true;
-            if(!(Math.ceil(this.filteredData.length / this.properties.limit) >= this.currentPage)){
+            if(this.currentPage >= Math.ceil(this.filteredData.length / this.properties.limit)){
                 thereIsNext = false;
             }
             return {
