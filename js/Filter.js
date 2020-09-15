@@ -139,20 +139,28 @@ export class Filter{
     execute(){
         this.order();
         this.filteredData = [];
-        let aux = [];
         this.currentPage = 1;
-        if(this.rules.length){
-            for(const rule of this.rules){
-                aux = rule.check(this.data, this.properties.limit);
-                if(aux.length){
-                    this.checkData(aux);
-                }else{
-                    this.filteredData = [];
-                    break;
+        if(this.data.length){
+            if(this.rules.length){
+                for (const data of this.data) {
+                    let status = {
+                        data: data,
+                        valid: true,
+                    };
+                    for(const rule of this.rules){
+                        if(status.valid){
+                            status = rule.check(status);
+                        }
+                    }
+                    if(status.valid){
+                        this.filteredData.push(data);
+                    }
                 }
+            }else{
+                this.filteredData = this.data;
             }
         }else{
-            this.filteredData = this.data;
+            this.filteredData = [];
         }
         return this.limit();
     }
@@ -354,36 +362,6 @@ export class Filter{
         }
         if(order.type){
             this.properties.order.type = order.type;
-        }
-    }
-
-    /**
-     * * Check if the data to for and the data filtered previous matches.
-     * @param {object} dataToFor - Data to for.
-     * @memberof Filter
-     */
-    checkData(dataToFor = []){
-        if(!this.filteredData.length){
-            for(const data of dataToFor){
-                this.filteredData.push(data);
-            }
-        }else{
-            let aux = this.filteredData;
-            this.filteredData = [];
-            let push;
-            if(dataToFor.length){
-                for(const newData of dataToFor){
-                    push = false;
-                    for(const oldData of aux){
-                        if(newData == oldData){
-                            push = true;
-                        }
-                    }
-                    if(push){
-                        this.filteredData.push(newData);
-                    }
-                }
-            }
         }
     }
 

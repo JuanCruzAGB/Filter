@@ -113,15 +113,28 @@ export class Rule{
     }
 
     /**
-     * * Check if the data to for validates.
-     * @param {object} dataToFor - Data to for.
+     * * Check if the data validates.
+     * @param {object} status - Filter status.
      * @returns
      * @memberof Rule
      */
-    check(dataToFor){
-        this.data = [];
-        this.checkType(dataToFor);
-        return this.data;
+    check(status = {
+        data: [],
+        valid: true,
+    }){
+        switch(typeof this.properties.value){
+            case 'object':
+                status = this.checkObjectData(status);
+                break;
+            default:
+                if(this.properties.regexp){
+                    status = this.checkRegExpData(status);
+                }else{   
+                    status = this.checkDefaultData(status);
+                }
+                break;
+        }
+        return status;
     }
 
     /**
@@ -147,7 +160,7 @@ export class Rule{
             case '=':
                 if(this.properties.value == data_value){
                     return true;
-                }else if(rule_value == data_value){
+                }else if(rule_value == data_value && rule_value != undefined){
                     return true;
                 }else{
                     return false;
@@ -155,7 +168,7 @@ export class Rule{
             case '>':
                 if(this.properties.value > data_value){
                     return true;
-                }else if(rule_value > data_value){
+                }else if(rule_value > data_value && rule_value != undefined){
                     return true;
                 }else{
                     return false;
@@ -163,7 +176,7 @@ export class Rule{
             case '<':
                 if(this.properties.value < data_value){
                     return true;
-                }else if(rule_value < data_value){
+                }else if(rule_value < data_value && rule_value != undefined){
                     return true;
                 }else{
                     return false;
@@ -262,96 +275,107 @@ export class Rule{
     }
 
     /**
-     * * Check the Filter value type.
-     * @param {object} dataToFor - Data to for.
+     * * Check if the data validates and push it.
+     * @param {object} status - Filter status.
+     * @returns
      * @memberof Rule
      */
-    checkType(dataToFor){
-        switch(typeof this.properties.value){
-            case 'object':
-                this.checkObjectData(dataToFor);
-                break;
-            default:
-                if(this.properties.regexp){
-                    this.checkRegExpData(dataToFor);
-                }else{   
-                    this.checkDefaultData(dataToFor);
-                }
-                break;
-        }
-    }
-
-    /**
-     * * Check if the data to for validates and push it.
-     * @param {object} dataToFor - Data to for.
-     * @memberof Rule
-     */
-    checkDefaultData(dataToFor){
-        for(const data of dataToFor){
-            if(data.hasOwnProperty(this.properties.target)){
-                let value = data[this.properties.target];
-                if(this.properties.value != undefined){
-                    if(this.comparateValues(value)){
-                        this.data.push(data);
-                    }
+    checkDefaultData(status = {
+        data: {},
+        valid: true,
+    }){
+        if(status.data.hasOwnProperty(this.properties.target)){
+            let value = status.data[this.properties.target];
+            if(this.properties.value != undefined){
+                if(this.comparateValues(value)){
+                    status.valid = true;
                 }else{
-                    this.data.push(data);
+                    status.valid = false;
                 }
+            }else{
+                status.valid = true;
             }
+        }else{
+            status.valid = false;
         }
+        return status;
     }
 
     /**
      * * Check if the data to for validates like a RegExp and push it.
-     * @param {object} dataToFor - Data to for.
+     * @param {object} status - Filter status.
+     * @returns
      * @memberof Rule
      */
-    checkRegExpData(dataToFor){
-        for(const data of dataToFor){
-            if(data.hasOwnProperty(this.properties.target)){
-                const value = data[this.properties.target];
-                let regexp = new RegExp(this.properties.value);
-                if(regexp.exec(value)){
-                    this.data.push(data);
-                }
+    checkRegExpData(status = {
+        data: {},
+        valid: true,
+    }){
+        if(status.data.hasOwnProperty(this.properties.target)){
+            const value = status.data[this.properties.target];
+            let regexp = new RegExp(this.properties.value);
+            if(regexp.exec(value)){
+                status.valid = true;
+            }else{
+                status.valid = false;
             }
+        }else{
+            status.valid = false;
         }
+        return status;
     }
 
     /**
-     * * Check if the data to for validates with a object and push it.
-     * @param {object} dataToFor - Data to for.
+     * * Check if the data validates with a object and push it.
+     * @param {object} status - Filter status.
      * @memberof Rule
      */
-    checkObjectData(dataToFor){
-        let auxData = [];
+    checkObjectData(status = {
+        data: {},
+        valid: true,
+    }){
         let index = 0;
+        let auxArray = [];
         for(const rule_element of this.properties.value){
-            for(const rule_key in rule_element){
-                if(rule_element.hasOwnProperty(rule_key)){
-                    index++;
-                    const rule_value = rule_element[rule_key];
-                    for(const data of dataToFor){
-                        if(data.hasOwnProperty(this.properties.target)){
-                            let elementByTarget = data[this.properties.target];
+            index++;
+            auxArray[index] = null;
+            if(auxArray[index] || auxArray[index] == null){
+                for(const rule_key in rule_element){
+                    if(rule_element.hasOwnProperty(rule_key)){
+                        const rule_value = rule_element[rule_key];
+                        if(status.data.hasOwnProperty(this.properties.target)){
+                            let elementByTarget = status.data[this.properties.target];
                             for(const data_element of elementByTarget){
                                 if(data_element.hasOwnProperty(rule_key)){
                                     const data_value = data_element[rule_key];
                                     if(this.comparateValues(data_value, rule_value)){
-                                        if(auxData.indexOf(data) === -1 && index == 1){
-                                            auxData.push(data);
+                                        auxArray[index] = true;
+                                        break;
+                                    }else{
+                                        if(index > 1){
+                                            auxArray[index] = false;
                                         }
                                     }
                                 }
                             }
+                        }else{
+                            auxArray[index] = false;
                         }
                     }
-                    this.data = this.checkCorrectObjectData(rule_element, auxData);
                 }
             }
         }
+        status.valid = true;
+        for (const aux of auxArray) {
+            if(aux != undefined){
+                if(!aux){
+                    status.valid = false;
+                }
+            }
+        }
+        return status;
     }
-
+    
     checkCorrectObjectData(rule, dataToFor){
         let spliceElements = [];
         for(const rule_key in rule){
