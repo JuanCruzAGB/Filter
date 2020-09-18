@@ -35,14 +35,34 @@ export class Rule{
     }){
         this.properties = {};
         this.originalProperties = {};
+        this.setType(properties);
         this.setTarget(properties);
         this.setComparator(properties);
         this.setValue(properties);
     }
 
+    /**
+     * * Set the Rule states.
+     * @memberof Rule
+     */
     setStates(){
         this.states = {};
         this.setActive();
+    }
+
+    /**
+     * * Set the Rule type.
+     * @param {object} properties - Rule properties.
+     * @memberof Rule
+     */
+    setType(properties = {
+        type: undefined,
+    }){
+        if(properties.type){
+            this.properties.type = properties.type;
+        }else{
+            this.properties.type = undefined;
+        }
     }
 
     /**
@@ -101,7 +121,7 @@ export class Rule{
      * @memberof Rule
      */
     setButton(filterId = 'filter-id'){
-        let htmls = Button.getHTML(this.properties.target);
+        let htmls = Button.getHTML(this.properties.target, this.properties.type);
         this.btns = [];
         for(const html of htmls){
             let btn = new Button({filterId: filterId}, html, this);
@@ -122,9 +142,12 @@ export class Rule{
         data: [],
         valid: true,
     }){
-        switch(typeof this.properties.value){
-            case 'object':
+        switch(this.properties.type){
+            case 'checkbox':
                 status = this.checkObjectData(status);
+                break;
+            case 'search':
+                status = this.checkSearchData(status);
                 break;
             default:
                 if(this.properties.regexp){
@@ -194,6 +217,13 @@ export class Rule{
         for(const btn of this.btns){
             if(btn.properties.name == name){
                 switch(btn.type){
+                    case 'search':
+                        if(btn.html.value){
+                            this.properties.value = btn.html.value;
+                        }else{
+                            this.properties.value = undefined;
+                        }
+                        break;
                     case 'checkbox':
                         if(this.properties.value && this.properties.value.length){
                             let push = true, index;
@@ -325,6 +355,35 @@ export class Rule{
         return status;
     }
 
+    checkSearchData(status = {
+        data: {},
+        valid: true,
+    }){
+        let found = false;
+        if(this.properties.value){
+            let targetToFor = this.properties.target.split(',');
+            for (const target of targetToFor) {
+                if(!found){
+                    if(status.data.hasOwnProperty(target)){
+                        const value = status.data[target];
+                        let regexp = new RegExp(this.properties.value.toLowerCase());
+                        if(regexp.exec(String(value).toLowerCase())){
+                            status.valid = true;
+                            found = true;
+                        }else{
+                            status.valid = false;
+                        }
+                    }else{
+                        status.valid = false;
+                    }
+                }
+            }
+        }else{
+            status.valid = true;
+        }
+        return status;
+    }
+
     /**
      * * Check if the data validates with a object and push it.
      * @param {object} status - Filter status.
@@ -422,20 +481,5 @@ export class Rule{
             }
         }
         return auxData;
-    }
-    
-    checkActive(btnClicked){
-        let found = false;
-        if(this.states.active.length){
-            for(const key in this.states.active){
-                if(this.states.active.hasOwnProperty(key)){
-                    const active = this.states.active[key];
-                    if(btnClicked == active){
-                        found = true;
-                    }
-                }
-            }
-        }
-        return found;
     }
 }

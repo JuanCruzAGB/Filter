@@ -149,6 +149,9 @@ export class Button{
         }else if(this.html.classList.contains('filter-checkbox')){
             this.type = 'checkbox';
             this.setCheckboxEvent(rule);
+        }else if(this.html.classList.contains('filter-search')){
+            this.type = 'search';
+            this.setSearchEvent(rule);
         }
     }
 
@@ -172,10 +175,21 @@ export class Button{
                     }
                 }
             }
-            if(!rule.checkActive(this) && click){
+            if(!this.classList.contains('active') && click){
                 rule.changeValue(this.dataset.name);
                 rule.setActiveState(this);
             }
+        });
+    }
+
+    /**
+     * * Set the Button type = 'text' event.
+     * @param {Rule} rule - The Rule.
+     * @memberof Button
+     */
+    setSearchEvent(rule = null){
+        this.html.addEventListener('keyup', function(e){
+            rule.changeValue(this.dataset.name);
         });
     }
 
@@ -259,18 +273,25 @@ export class Button{
     /**
      * * Get the Button HTML Element.
      * @static
-     * @param {string} targetWanted
+     * @param {string} targetWanted - Button target.
+     * @param {string} typeWanted - Button type.
      * @returns
      * @memberof Button
      */
-    static getHTML(targetWanted){
+    static getHTML(targetWanted = undefined, typeWanted = undefined){
         let filters = [];
-        let htmls = document.querySelectorAll('.filter[data-target]');
-        for(const html of htmls){
-            let targets = html.dataset.target.split(',');
-            for(const target of targets){
-                if(target == targetWanted){
-                    filters.push(html);
+        if(typeWanted){
+            let html = document.querySelector('.filter-search');
+            html.dataset.target = targetWanted;
+            filters.push(html);
+        }else{
+            let htmls = document.querySelectorAll('.filter[data-target]');
+            for(const html of htmls){
+                let targets = html.dataset.target.split(',');
+                for(const target of targets){
+                    if(target == targetWanted){
+                        filters.push(html);
+                    }
                 }
             }
         }
