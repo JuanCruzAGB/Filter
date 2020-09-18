@@ -280,20 +280,23 @@ export class Button{
      */
     static getHTML(targetWanted = undefined, typeWanted = undefined){
         let filters = [];
-        if(typeWanted){
-            let html = document.querySelector('.filter-search');
-            html.dataset.target = targetWanted;
-            filters.push(html);
-        }else{
-            let htmls = document.querySelectorAll('.filter[data-target]');
-            for(const html of htmls){
-                let targets = html.dataset.target.split(',');
-                for(const target of targets){
-                    if(target == targetWanted){
-                        filters.push(html);
+        switch (typeWanted) {
+            case 'search':
+                let html = document.querySelector('.filter-search');
+                html.dataset.target = targetWanted;
+                filters.push(html);
+                break;
+            default:
+                let htmls = document.querySelectorAll('.filter[data-target]');
+                for(const html of htmls){
+                    let targets = html.dataset.target.split(',');
+                    for(const target of targets){
+                        if(target == targetWanted){
+                            filters.push(html);
+                        }
                     }
                 }
-            }
+                break;
         }
         return filters;
     }

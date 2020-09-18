@@ -14,6 +14,7 @@ export class Rule{
      * @memberof Rule
      */
     constructor(properties = {
+        type: undefined,
         target: undefined,
         comparator: '=',
         value: undefined,
@@ -29,6 +30,7 @@ export class Rule{
      * @memberof Rule
      */
     setProperties(properties = {
+        type: undefined,
         target: undefined,
         comparator: '=',
         value: undefined,
@@ -395,40 +397,40 @@ export class Rule{
     }){
         let index = 0;
         let auxArray = [];
-        for(const rule_element of this.properties.value){
-            index++;
-            auxArray[index] = null;
-            if(auxArray[index] || auxArray[index] == null){
-                for(const rule_key in rule_element){
-                    if(rule_element.hasOwnProperty(rule_key)){
-                        const rule_value = rule_element[rule_key];
-                        if(status.data.hasOwnProperty(this.properties.target)){
-                            let elementByTarget = status.data[this.properties.target];
-                            for(const data_element of elementByTarget){
-                                if(data_element.hasOwnProperty(rule_key)){
-                                    const data_value = data_element[rule_key];
-                                    if(this.comparateValues(data_value, rule_value)){
-                                        auxArray[index] = true;
-                                        break;
-                                    }else{
-                                        if(index > 1){
+        if(typeof this.properties.value == 'object'){
+            for(const rule_element of this.properties.value){
+                index++;
+                auxArray[index] = null;
+                if(auxArray[index] || auxArray[index] == null){
+                    for(const rule_key in rule_element){
+                        if(rule_element.hasOwnProperty(rule_key)){
+                            const rule_value = rule_element[rule_key];
+                            if(status.data.hasOwnProperty(this.properties.target)){
+                                let elementByTarget = status.data[this.properties.target];
+                                for(const data_element of elementByTarget){
+                                    if(data_element.hasOwnProperty(rule_key)){
+                                        const data_value = data_element[rule_key];
+                                        if(this.comparateValues(data_value, rule_value)){
+                                            auxArray[index] = true;
+                                            break;
+                                        }else{
                                             auxArray[index] = false;
                                         }
                                     }
                                 }
+                            }else{
+                                auxArray[index] = false;
                             }
-                        }else{
-                            auxArray[index] = false;
                         }
                     }
                 }
             }
-        }
-        status.valid = true;
-        for (const aux of auxArray) {
-            if(aux != undefined){
-                if(!aux){
-                    status.valid = false;
+            status.valid = true;
+            for (const aux of auxArray) {
+                if(aux != undefined){
+                    if(!aux){
+                        status.valid = false;
+                    }
                 }
             }
         }
