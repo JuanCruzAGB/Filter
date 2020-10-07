@@ -8,13 +8,14 @@ export class Button{
      * * Creates an instance of Button.
      * @param {HTMLElement} html - Button HTML Element.
      * @param {Rule} rule - The Rule.
+     * @param {Filter} filter - The Filter.
      * @memberof Button
      */
     constructor(properties = {
         id: 'filter-id',
-    }, html = null, rule = null){
+    }, html = null, rule = null, filter = null){
         this.setHTML(html, properties);
-        this.setType(rule);
+        this.setType(rule, filter);
         this.setProperties(properties);
         this.setStates();
         this.checkRegExp();
@@ -29,7 +30,7 @@ export class Button{
     }){
         this.properties = {};
         this.originalProperties = {};
-        this.setId();
+        this.setId(properties);
         this.setValue();
         this.setName();
     }
@@ -137,30 +138,32 @@ export class Button{
     /**
      * * Set the Button type.
      * @param {Rule} rule - The Rule.
+     * @param {Filter} filter - The Filter.
      * @memberof Button
      */
-    setType(rule = null){
+    setType(rule = null, filter = null){
         if(this.html.classList.contains('filter-button')){
             this.type = 'button';
-            this.setButtonEvent(rule);
+            this.setButtonEvent(rule, filter);
         }else if(this.html.classList.contains('filter-select')){
             this.type = 'select';
-            this.setSelectEvent(rule);
+            this.setSelectEvent(rule, filter);
         }else if(this.html.classList.contains('filter-checkbox')){
             this.type = 'checkbox';
-            this.setCheckboxEvent(rule);
+            this.setCheckboxEvent(rule, filter);
         }else if(this.html.classList.contains('filter-search')){
             this.type = 'search';
-            this.setSearchEvent(rule);
+            this.setSearchEvent(rule, filter);
         }
     }
 
     /**
      * * Set the Button type = 'button' event.
      * @param {Rule} rule - The Rule.
+     * @param {Filter} filter - The Filter.
      * @memberof Button
      */
-    setButtonEvent(rule = null){
+    setButtonEvent(rule = null, filter = null){
         let btn = this;
         this.html.addEventListener('click', function(e){
             let click = true;
@@ -179,39 +182,62 @@ export class Button{
                 rule.changeValue(this.dataset.name);
                 rule.setActiveState(this);
             }
+            if(rule.properties.hasOwnProperty('event')){
+                let params = rule.properties.event.params;
+                params.data = filter.execute();
+                rule.properties.event.function(params);
+            }
         });
     }
 
     /**
      * * Set the Button type = 'text' event.
      * @param {Rule} rule - The Rule.
+     * @param {Filter} filter - The Filter.
      * @memberof Button
      */
-    setSearchEvent(rule = null){
+    setSearchEvent(rule = null, filter = null){
         this.html.addEventListener('keyup', function(e){
             rule.changeValue(this.dataset.name);
+            if(rule.properties.hasOwnProperty('event')){
+                let params = rule.properties.event.params;
+                params.data = filter.execute();
+                rule.properties.event.function(params);
+            }
         });
     }
 
     /**
      * * Set the Button type = 'select' event.
      * @param {Rule} rule - The Rule.
+     * @param {Filter} filter - The Filter.
      * @memberof Button
      */
-    setSelectEvent(rule = null){
+    setSelectEvent(rule = null, filter = null){
         this.html.addEventListener('change', function(e){
             rule.changeValue(this.dataset.name);
+            if(rule.properties.hasOwnProperty('event')){
+                let params = rule.properties.event.params;
+                params.data = filter.execute();
+                rule.properties.event.function(params);
+            }
         });
     }
 
     /**
      * * Set the Button type = 'checkbox' event.
      * @param {Rule} rule - The Rule.
+     * @param {Filter} filter - The Filter.
      * @memberof Button
      */
-    setCheckboxEvent(rule = null){
+    setCheckboxEvent(rule = null, filter = null){
         this.html.addEventListener('change', function(e){
             rule.changeValue(this.dataset.name, this.name);
+            if(rule.properties.hasOwnProperty('event')){
+                let params = rule.properties.event.params;
+                params.data = filter.execute();
+                rule.properties.event.function(params);
+            }
         });
     }
 

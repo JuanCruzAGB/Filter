@@ -10,7 +10,7 @@ export class Rule{
     /**
      * * Creates an instance of Rule.
      * @param {object} properties - Rule properties.
-     * @param {string} filterId - Filter ID.
+     * @param {Filter} filter - The Filter.
      * @memberof Rule
      */
     constructor(properties = {
@@ -18,10 +18,16 @@ export class Rule{
         target: undefined,
         comparator: '=',
         value: undefined,
-    }, filterId = 'filter-id'){
+        event: {
+            function: undefined,
+            params: {
+                //
+            },
+        },
+    }, filter = 'filter-id'){
         this.setProperties(properties);
         this.setStates();
-        this.setButton(filterId);
+        this.setButton(filter);
     }
 
     /**
@@ -34,6 +40,12 @@ export class Rule{
         target: undefined,
         comparator: '=',
         value: undefined,
+        event: {
+            function: undefined,
+            params: {
+                //
+            },
+        },
     }){
         this.properties = {};
         this.originalProperties = {};
@@ -41,6 +53,9 @@ export class Rule{
         this.setTarget(properties);
         this.setComparator(properties);
         this.setValue(properties);
+        if(properties.hasOwnProperty('event')){
+            this.setEvent(properties);
+        }
     }
 
     /**
@@ -49,7 +64,6 @@ export class Rule{
      */
     setStates(){
         this.states = {};
-        this.setActive();
     }
 
     /**
@@ -114,19 +128,31 @@ export class Rule{
         }
     }
 
-    setActive(){
-        this.states.active = [];
+    /**
+     * * Set the Rule event executed.
+     * @param {object} properties - Rule properties.
+     * @memberof Rule
+     */
+    setEvent(properties = {
+        event: {
+            function: undefined,
+            params: {
+                //
+            },
+        },
+    }){
+        this.properties.event = properties.event;
     }
 
     /**
      * * Set the Rule buttons.
      * @memberof Rule
      */
-    setButton(filterId = 'filter-id'){
+    setButton(filter = 'filter-id'){
         let htmls = Button.getHTML(this.properties.target, this.properties.type);
         this.btns = [];
         for(const html of htmls){
-            let btn = new Button({filterId: filterId}, html, this);
+            let btn = new Button({filterId: filter.properties.id}, html, this, filter);
             if(btn.properties.regexp){
                 this.properties.regexp = true;
             }

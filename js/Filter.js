@@ -20,11 +20,18 @@ export class Filter{
             by: undefined,
             type: 'DESC',
         }, limit: false,
+        pagination: false,
     }, states = {},
     rules = [{
         target: undefined,
         comparator: '=',
         value: undefined,
+        event: {
+            function: undefined,
+            params: {
+                //
+            },
+        },
     }], data = []){
         this.setProperties(properties);
         this.setStates(states);
@@ -43,11 +50,15 @@ export class Filter{
             by: undefined,
             type: 'DESC',
         }, limit: false,
+        pagination: false,
     }){
         this.properties = {};
         this.setId(properties);
         this.setOrder(properties);
         this.setLimit(properties);
+        if(properties.hasOwnProperty('pagination')){
+            this.setPagination();
+        }
     }
 
     /**
@@ -70,10 +81,16 @@ export class Filter{
         target: undefined,
         comparator: '=',
         value: undefined,
+        event: {
+            function: undefined,
+            params: {
+                //
+            },
+        },
     }]){
         this.rules = [];
         for(const rule of rules){
-            this.rules.push(new Rule(rule, this.properties.id));
+            this.rules.push(new Rule(rule, this));
         }
     }
 
@@ -129,6 +146,17 @@ export class Filter{
         limit: false,
     }){
         this.properties.limit = properties.limit;
+    }
+
+    /**
+     * * Set the Filter pagination.
+     * @param {object} properties - Filter properties.
+     * @memberof Filter
+     */
+    setPagination(properties = {
+        pagination: false,
+    }){
+        this.properties.pagination = properties.pagination;
     }
 
     /**
@@ -268,6 +296,7 @@ export class Filter{
         let auxData = [];
         let column = 1;
         let count = 1;
+        this.setPages();
         for(const data of this.filteredData){
             if(column <= this.properties.limit || !this.properties.limit){
                 auxData.push(data);
@@ -289,6 +318,18 @@ export class Filter{
             }
         }
         return returnData[this.currentPage - 1];
+    }
+
+    /**
+     * * Set the filtered data pages.
+     * @memberof Filter
+     */
+    setPages(){
+        if((this.filteredData.length / this.properties.limit) % 1 === 0){
+            this.pages = this.filteredData.length / this.properties.limit;
+        }else{
+            this.pages = parseInt(this.filteredData.length / this.properties.limit) + 1;
+        }
     }
 
     /**
