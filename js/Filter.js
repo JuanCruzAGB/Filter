@@ -1,5 +1,6 @@
 // * Filter repository.
 import { Rule } from "./Rule.js";
+import { Order } from "./Order.js";
 
 /**
  * * Filter makes an excellent filter.
@@ -19,19 +20,20 @@ export class Filter{
         order: {
             by: undefined,
             type: 'DESC',
+            btn: false,
         }, limit: false,
         pagination: false,
-    }, states = {},
-    rules = [{
-        target: undefined,
-        comparator: '=',
-        value: undefined,
         event: {
             function: undefined,
             params: {
                 //
             },
         },
+    }, states = {},
+    rules = [{
+        target: undefined,
+        comparator: '=',
+        value: undefined,
     }], data = []){
         this.setProperties(properties);
         this.setStates(states);
@@ -49,6 +51,7 @@ export class Filter{
         order: {
             by: undefined,
             type: 'DESC',
+            btn: false,
         }, limit: false,
         pagination: false,
     }){
@@ -56,6 +59,9 @@ export class Filter{
         this.setId(properties);
         this.setOrder(properties);
         this.setLimit(properties);
+        if(properties.hasOwnProperty('event')){
+            this.setEvent(properties);
+        }
         if(properties.hasOwnProperty('pagination')){
             this.setPagination();
         }
@@ -81,12 +87,6 @@ export class Filter{
         target: undefined,
         comparator: '=',
         value: undefined,
-        event: {
-            function: undefined,
-            params: {
-                //
-            },
-        },
     }]){
         this.rules = [];
         for(const rule of rules){
@@ -115,6 +115,22 @@ export class Filter{
     }
 
     /**
+     * * Set the Filter event executed.
+     * @param {object} event - Filter event.
+     * @memberof Filter
+     */
+    setEvent(properties = {
+        event: {
+            function: undefined,
+            params: {
+                //
+            },
+        }
+    }){
+        this.properties.event = properties.event;
+    }
+
+    /**
      * * Set the Filter order.
      * @param {object} properties - Filter properties.
      * @memberof Filter
@@ -123,17 +139,25 @@ export class Filter{
         order: {
             by: undefined,
             type: 'DESC',
+            btn: false,
         },
     }){
         this.properties.order = {
             by: undefined,
-            type: 'DESC'
+            type: 'DESC',
+            btn: false,
         };
         if(properties.order.by){
             this.properties.order.by = properties.order.by;
         }
         if(properties.order.type){
             this.properties.order.type = properties.order.type;
+        }
+        if(properties.order.btn){
+            this.properties.order.buttons = [];
+            for(const btn of document.querySelectorAll(`.filter-${this.properties.id}.filter-order`)){
+                this.properties.order.buttons.push(new Order(btn, this));
+            }
         }
     }
 
@@ -237,6 +261,18 @@ export class Filter{
     }
 
     /**
+     * * Execute the Filter event.
+     * @memberof Filter
+     */
+    executeEvent(){
+        if(this.properties.hasOwnProperty('event')){
+            let params = this.properties.event.params;
+            params.data = this.execute();
+            this.properties.event.function(params);
+        }
+    }
+
+    /**
      * * Order the data ascendly.
      * @memberof Filter
      */
@@ -263,26 +299,52 @@ export class Filter{
         by: undefined,
     }){
         return function(a, b) {
-            if(a.hasOwnProperty(order.by)){
-                let aValue = a[order.by],
-                    bValue = b[order.by];
-                if(typeof aValue == 'string'){
-                    if(aValue){
-                        aValue = aValue.toUpperCase();
+            if(/:/.exec(order.by)){
+                let elementName = order.by.split(':').shift();
+                let by = order.by.split(':').pop();
+                if(a.hasOwnProperty(elementName)){
+                    let element = a[elementName];
+                    if(element.hasOwnProperty(by)){
+                        let aValue = a[elementName][by],
+                            bValue = b[elementName][by];
+                        if(typeof aValue == 'string'){
+                            if(aValue){
+                                aValue = aValue.toUpperCase();
+                            }
+                            if(bValue){
+                                bValue = bValue.toUpperCase();
+                            }
+                        }
+                        if(aValue < bValue){
+                            return -1;
+                        }
+                        if(aValue > bValue){
+                            return 1;
+                        }
                     }
-                    if(bValue){
-                        bValue = bValue.toUpperCase();
+                }
+                return 0;
+            }else{
+                if(a.hasOwnProperty(order.by)){
+                    let aValue = a[order.by],
+                        bValue = b[order.by];
+                    if(typeof aValue == 'string'){
+                        if(aValue){
+                            aValue = aValue.toUpperCase();
+                        }
+                        if(bValue){
+                            bValue = bValue.toUpperCase();
+                        }
+                    }
+                    if(aValue < bValue){
+                        return -1;
+                    }
+                    if(aValue > bValue){
+                        return 1;
                     }
                 }
-                if(aValue < bValue){
-                    return -1;
-                }
-                if(aValue > bValue){
-                    return 1;
-                }
-    
+                return 0;
             }
-            return 0;
         }
     }
 

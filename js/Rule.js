@@ -10,7 +10,7 @@ export class Rule{
     /**
      * * Creates an instance of Rule.
      * @param {object} properties - Rule properties.
-     * @param {Filter} filter - The Filter.
+     * @param {Filter} filter - Filter.
      * @memberof Rule
      */
     constructor(properties = {
@@ -18,13 +18,7 @@ export class Rule{
         target: undefined,
         comparator: '=',
         value: undefined,
-        event: {
-            function: undefined,
-            params: {
-                //
-            },
-        },
-    }, filter = 'filter-id'){
+    }, filter = undefined){
         this.setProperties(properties);
         this.setStates();
         this.setButton(filter);
@@ -40,12 +34,6 @@ export class Rule{
         target: undefined,
         comparator: '=',
         value: undefined,
-        event: {
-            function: undefined,
-            params: {
-                //
-            },
-        },
     }){
         this.properties = {};
         this.originalProperties = {};
@@ -53,9 +41,6 @@ export class Rule{
         this.setTarget(properties);
         this.setComparator(properties);
         this.setValue(properties);
-        if(properties.hasOwnProperty('event')){
-            this.setEvent(properties);
-        }
     }
 
     /**
@@ -129,34 +114,15 @@ export class Rule{
     }
 
     /**
-     * * Set the Rule event executed.
-     * @param {object} properties - Rule properties.
-     * @memberof Rule
-     */
-    setEvent(properties = {
-        event: {
-            function: undefined,
-            params: {
-                //
-            },
-        },
-    }){
-        this.properties.event = properties.event;
-    }
-
-    /**
      * * Set the Rule buttons.
      * @memberof Rule
      */
-    setButton(filter = 'filter-id'){
-        let htmls = Button.getHTML(this.properties.target, this.properties.type);
-        this.btns = [];
-        for(const html of htmls){
-            let btn = new Button({filterId: filter.properties.id}, html, this, filter);
+    setButton(filter = undefined){
+        this.btns = Button.getHTML(this.properties.target, this.properties.type, this, filter);
+        for(const btn of this.btns){
             if(btn.properties.regexp){
                 this.properties.regexp = true;
             }
-            this.btns.push(btn);
         }
     }
 

@@ -182,11 +182,7 @@ export class Button{
                 rule.changeValue(this.dataset.name);
                 rule.setActiveState(this);
             }
-            if(rule.properties.hasOwnProperty('event')){
-                let params = rule.properties.event.params;
-                params.data = filter.execute();
-                rule.properties.event.function(params);
-            }
+            filter.executeEvent();
         });
     }
 
@@ -199,11 +195,7 @@ export class Button{
     setSearchEvent(rule = null, filter = null){
         this.html.addEventListener('keyup', function(e){
             rule.changeValue(this.dataset.name);
-            if(rule.properties.hasOwnProperty('event')){
-                let params = rule.properties.event.params;
-                params.data = filter.execute();
-                rule.properties.event.function(params);
-            }
+            filter.executeEvent();
         });
     }
 
@@ -216,11 +208,7 @@ export class Button{
     setSelectEvent(rule = null, filter = null){
         this.html.addEventListener('change', function(e){
             rule.changeValue(this.dataset.name);
-            if(rule.properties.hasOwnProperty('event')){
-                let params = rule.properties.event.params;
-                params.data = filter.execute();
-                rule.properties.event.function(params);
-            }
+            filter.executeEvent();
         });
     }
 
@@ -233,11 +221,7 @@ export class Button{
     setCheckboxEvent(rule = null, filter = null){
         this.html.addEventListener('change', function(e){
             rule.changeValue(this.dataset.name, this.name);
-            if(rule.properties.hasOwnProperty('event')){
-                let params = rule.properties.event.params;
-                params.data = filter.execute();
-                rule.properties.event.function(params);
-            }
+            filter.executeEvent();
         });
     }
 
@@ -301,16 +285,19 @@ export class Button{
      * @static
      * @param {string} targetWanted - Button target.
      * @param {string} typeWanted - Button type.
+     * @param {Rule} rule - Rule.
+     * @param {Filter} filter - Filter.
      * @returns
      * @memberof Button
      */
-    static getHTML(targetWanted = undefined, typeWanted = undefined){
-        let filters = [];
+    static getHTML(targetWanted = undefined, typeWanted = undefined, rule = undefined, filter = undefined){
+        this.btns = [];
+        let btns = [];
         switch (typeWanted) {
             case 'search':
                 let html = document.querySelector('.filter-search');
                 html.dataset.target = targetWanted;
-                filters.push(html);
+                btns.push(new this({filterId: filter.properties.id}, html, rule, filter));
                 break;
             default:
                 let htmls = document.querySelectorAll('.filter[data-target]');
@@ -318,12 +305,12 @@ export class Button{
                     let targets = html.dataset.target.split(',');
                     for(const target of targets){
                         if(target == targetWanted){
-                            filters.push(html);
+                            btns.push(new this({filterId: filter.properties.id}, html, rule, filter));
                         }
                     }
                 }
                 break;
         }
-        return filters;
+        return btns;
     }
 }
