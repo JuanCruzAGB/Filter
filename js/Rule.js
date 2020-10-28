@@ -271,6 +271,9 @@ export class Rule{
     setActiveState(btnClicked){
         this.removeActiveState();
         btnClicked.classList.add('active');
+        if(!this.states.hasOwnProperty('active')){
+            this.states.active = [];
+        }
         this.states.active.push(btnClicked);
     }
 
@@ -283,7 +286,7 @@ export class Rule{
             if(btn.html.classList.contains('active')){
                 btn.html.classList.remove('active');
             }
-            if(this.states.active.length){
+            if(this.states.hasOwnProperty('active') && this.states.active.length){
                 let index; 
                 for(const key in this.states.active){
                     if(this.states.active.hasOwnProperty(key)){

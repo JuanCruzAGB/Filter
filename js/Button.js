@@ -128,11 +128,11 @@ export class Button{
         id: 'filter-id'
     }){
         this.html = html;
-        if(!this.html.dataset.filter){
-            this.html.dataset.filter = properties.id;
-        }else{
-            this.html.dataset.filter = this.html.dataset.filter + ',' + properties.id;
-        }
+        // if(!this.html.dataset.filter){
+        //     this.html.dataset.filter = properties.id;
+        // }else{
+        //     this.html.dataset.filter = this.html.dataset.filter + ',' + properties.id;
+        // }
     }
 
     /**
@@ -167,17 +167,17 @@ export class Button{
         let btn = this;
         this.html.addEventListener('click', function(e){
             let click = true;
-            if(this.dataset.filter && this.dataset.filter.split(',')){
-                let filtersId = this.dataset.filter.split(',');
-                for(const key in filtersId){
-                    if(filtersId.hasOwnProperty(key)){
-                        const filterId = filtersId[key];
-                        if(filterId == btn.properties.id && (key + 1) == filtersId.length){
-                            click = false;
-                        }
-                    }
-                }
-            }
+            // if(this.dataset.filter && this.dataset.filter.split(',')){
+            //     let filtersId = this.dataset.filter.split(',');
+            //     for(const key in filtersId){
+            //         if(filtersId.hasOwnProperty(key)){
+            //             const filterId = filtersId[key];
+            //             if(filterId == btn.properties.id && (key + 1) == filtersId.length){
+            //                 click = false;
+            //             }
+            //         }
+            //     }
+            // }
             if(!this.classList.contains('active') && click){
                 rule.changeValue(this.dataset.name);
                 rule.setActiveState(this);

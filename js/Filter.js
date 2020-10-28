@@ -59,9 +59,7 @@ export class Filter{
         this.setId(properties);
         this.setOrder(properties);
         this.setLimit(properties);
-        if(properties.hasOwnProperty('event')){
-            this.setEvent(properties);
-        }
+        this.setEvent(properties);
         if(properties.hasOwnProperty('pagination')){
             this.setPagination();
         }
@@ -127,7 +125,19 @@ export class Filter{
             },
         }
     }){
-        this.properties.event = properties.event;
+        if(properties.hasOwnProperty('event')){
+            this.properties.event = {
+                function: properties.event.function,
+                params: properties.event.params,
+            };
+        }else{
+            this.properties.event = {
+                function: function(params){ /* console.log(params.data) */ },
+                params: {
+                    //
+                },
+            };
+        }
     }
 
     /**
