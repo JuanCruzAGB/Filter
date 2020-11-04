@@ -9,8 +9,12 @@ import { Button } from "./Button.js";
 export class Rule{
     /**
      * * Creates an instance of Rule.
-     * @param {object} properties - Rule properties.
-     * @param {Filter} filter - Filter.
+     * @param {Object} properties Rules Properties.
+     * @param {String} properties.type Type of Rule.
+     * @param {String} properties.target Rule target.
+     * @param {String} properties.comparator Type of comparation.
+     * @param {*} properties.value Rule default Value.
+     * @param {Filter} filter Parent Filter.
      * @memberof Rule
      */
     constructor(properties = {
@@ -26,7 +30,11 @@ export class Rule{
 
     /**
      * * Set the Rule properties.
-     * @param {object} properties - Rule properties.
+     * @param {Object} properties Rules Properties.
+     * @param {String} properties.type Type of Rule.
+     * @param {String} properties.target Rule target.
+     * @param {String} properties.comparator Type of comparation.
+     * @param {*} properties.value Rule default Value.
      * @memberof Rule
      */
     setProperties(properties = {
@@ -44,6 +52,15 @@ export class Rule{
     }
 
     /**
+     * * Returns the Rule properties.
+     * @returns {Object} The Rule properties.
+     * @memberof Rule
+     */
+    getProperties(){
+        return this.properties;
+    }
+
+    /**
      * * Set the Rule states.
      * @memberof Rule
      */
@@ -52,73 +69,123 @@ export class Rule{
     }
 
     /**
+     * * Returns the Rule states.
+     * @returns {Object} The Rule states.
+     * @memberof Rule
+     */
+    getStates(){
+        return this.states;
+    }
+
+    /**
      * * Set the Rule type.
-     * @param {object} properties - Rule properties.
+     * @param {Object} properties Rules Properties.
+     * @param {String} properties.type Type of Rule.
      * @memberof Rule
      */
     setType(properties = {
         type: undefined,
     }){
-        if(properties.type){
+        if (properties.hasOwnProperty('type')) {
             this.properties.type = properties.type;
-        }else{
+        } else {
             this.properties.type = undefined;
         }
     }
 
     /**
+     * * Returns the Rule type.
+     * @returns {String} The Rule type.
+     * @memberof Rule
+     */
+    getType(){
+        return this.properties.type;
+    }
+
+    /**
      * * Set the Rule target.
-     * @param {object} properties - Rule properties.
+     * @param {Object} properties Rules Properties.
+     * @param {String} properties.target Rule target.
      * @memberof Rule
      */
     setTarget(properties = {
         target: undefined,
     }){
-        if(properties.target){
+        if (properties.hasOwnProperty('target')) {
             this.properties.target = properties.target;
-        }else{
+        } else {
             this.properties.target = undefined;
         }
     }
 
     /**
+     * * Returns the Rule target.
+     * @returns {String} The Rule target.
+     * @memberof Rule
+     */
+    getTarget(){
+        return this.properties.target;
+    }
+
+    /**
      * * Set the Rule comparator.
-     * @param {object} properties - Rule properties.
+     * @param {Object} properties Rules Properties.
+     * @param {String} properties.comparator Type of comparation.
      * @memberof Rule
      */
     setComparator(properties = {
         comparator: '=',
     }){
-        if(properties.comparator){
+        if (properties.hasOwnProperty('comparator')) {
             this.properties.comparator = properties.comparator;
-        }else{
+        } else {
             this.properties.comparator = '=';
         }
     }
 
     /**
+     * * Returns the Rule comparator.
+     * @returns {String} The Type of comparation.
+     * @memberof Rule
+     */
+    getComparator(){
+        return this.properties.comparator;
+    }
+
+    /**
      * * Set the Rule value.
-     * @param {object} properties - Rule properties.
+     * @param {Object} properties Rules Properties.
+     * @param {*} properties.value Rule default Value.
      * @memberof Rule
      */
     setValue(properties = {
         value: undefined,
     }){
-        if(properties.value){
+        if (properties.hasOwnProperty('value')) {
             this.properties.value = properties.value;
             this.originalProperties.value = properties.value;
-        }else{
+        } else {
             this.properties.value = undefined;
             this.originalProperties.value = undefined;
         }
     }
 
     /**
+     * * Returns the Rule value.
+     * @returns {*} The Rule value.
+     * @memberof Rule
+     */
+    getValue(){
+        return this.properties.value;
+    }
+
+    /**
      * * Set the Rule buttons.
+     * @param {Filter} filter Parent Filter.
      * @memberof Rule
      */
     setButton(filter = undefined){
-        this.btns = Button.getHTML(this.properties.target, this.properties.type, this, filter);
+        this.btns = Button.getHTML(this.getTarget(), this.getType(), this, filter);
         for(const btn of this.btns){
             if(btn.properties.regexp){
                 this.properties.regexp = true;
@@ -127,16 +194,36 @@ export class Rule{
     }
 
     /**
+     * * Returns the Rule buttons.
+     * @returns {Button[]} The Rule buttons.
+     * @memberof Rule
+     */
+    getButton(){
+        return this.properties.btns;
+    }
+
+    /**
+     * * Returns the Rule RegExp.
+     * @returns {RegExp} The Rule "Is there a RegExp?" boolean.
+     * @memberof Rule
+     */
+    getRegExp(){
+        return this.properties.regexp;
+    }
+
+    /**
      * * Check if the data validates.
-     * @param {object} status - Filter status.
-     * @returns
+     * @param {Object} status Filter status.
+     * @param {Array} status.data Data filtered.
+     * @param {Boolean} status.valid If the filtration is valid or not.
+     * @returns {Object} The status.
      * @memberof Rule
      */
     check(status = {
         data: [],
         valid: true,
     }){
-        switch(this.properties.type){
+        switch(this.getType()){
             case 'checkbox':
                 status = this.checkObjectData(status);
                 break;
@@ -144,7 +231,7 @@ export class Rule{
                 status = this.checkSearchData(status);
                 break;
             default:
-                if(this.properties.regexp){
+                if(this.getRegExp()){
                     status = this.checkRegExpData(status);
                 }else{   
                     status = this.checkDefaultData(status);
@@ -158,7 +245,7 @@ export class Rule{
      * * Reset the Rule.
      * @memberof Rule
      */
-    reset(id){
+    reset(){
         this.properties.value = this.originalProperties.value;
         for(const btn of this.btns){
             btn.reset(this);
@@ -167,15 +254,15 @@ export class Rule{
 
     /**
      * * Comparates the values.
-     * @param {*} data_value - Data value.
-     * @param {*} rule_value - Rule value.
-     * @returns
+     * @param {*} data_value Data value to comparate.
+     * @param {*} rule_value Rule value to comparate.
+     * @returns {Boolean} If the comparation is true or false.
      * @memberof Rule
      */
     comparateValues(data_value, rule_value = undefined){
-        switch(this.properties.comparator){
+        switch(this.getComparator()){
             case '=':
-                if(this.properties.value == data_value){
+                if(this.getValue() == data_value){
                     return true;
                 }else if(rule_value == data_value && rule_value != undefined){
                     return true;
@@ -183,7 +270,7 @@ export class Rule{
                     return false;
                 }
             case '>':
-                if(this.properties.value > data_value){
+                if(this.getValue() > data_value){
                     return true;
                 }else if(rule_value > data_value && rule_value != undefined){
                     return true;
@@ -191,7 +278,7 @@ export class Rule{
                     return false;
                 }
             case '<':
-                if(this.properties.value < data_value){
+                if(this.getValue() < data_value){
                     return true;
                 }else if(rule_value < data_value && rule_value != undefined){
                     return true;
@@ -203,57 +290,57 @@ export class Rule{
 
     /**
      * * Change the Rule value.
-     * @param {string} name - Button name.
-     * @param {string} inputName - <input> name.
+     * @param {String} name Button name.
+     * @param {String} inputName <input> name.
      * @memberof Rule
      */
     changeValue(name = undefined, inputName = undefined){
         for(const btn of this.btns){
-            if(btn.properties.name == name){
+            if(btn.getName() == name){
                 switch(btn.type){
                     case 'search':
-                        if(btn.html.value){
-                            this.properties.value = btn.html.value;
+                        if(btn.getHTML().value){
+                            this.properties.value = btn.getHTML().value;
                         }else{
                             this.properties.value = undefined;
                         }
                         break;
                     case 'checkbox':
-                        if(this.properties.value && this.properties.value.length){
+                        if(this.getValue() && this.getValue().length){
                             let push = true, index;
                             for(const key in this.properties.value){
-                                if(this.properties.value.hasOwnProperty(key)){
-                                    const element = this.properties.value[key];
+                                if(this.getValue().hasOwnProperty(key)){
+                                    const element = this.getValue()[key];
                                     const forValue = element[[inputName]];
-                                    if(btn.properties.value == forValue){
+                                    if(btn.getValue() == forValue){
                                         push = false;
                                         index = key;
                                     }
                                 }
                             }
                             if(push){
-                                this.properties.value.push({[inputName]: btn.properties.value});
+                                this.properties.value.push({[inputName]: btn.getValue()});
                             }else{ 
                                 this.properties.value.splice(index, 1);
                             }
                         }else{
                             this.properties.value = [];
-                            this.properties.value.push({[inputName]: btn.properties.value});
+                            this.properties.value.push({[inputName]: btn.getValue()});
                         }
-                        if(!this.properties.value.length){
+                        if(!this.getValue().length){
                             this.properties.value = undefined;
                         }
                         break;
                     case 'select':
-                        if(btn.html.value){
-                            this.properties.value = btn.html.value;
+                        if(btn.getHTML().value){
+                            this.properties.value = btn.getHTML().value;
                         }else{
                             this.properties.value = undefined;
                         }
                         break;
                     default:
-                        if(btn.html.value){
-                            this.properties.value = btn.html.value;
+                        if(btn.getHTML().value){
+                            this.properties.value = btn.getHTML().value;
                         }else{
                             this.properties.value = undefined;
                         }
@@ -265,7 +352,7 @@ export class Rule{
 
     /**
      * * Set the Button active state.
-     * @param {*} btnClicked
+     * @param {HTMLElement} btnClicked Button clicked HTML Element.
      * @memberof Rule
      */
     setActiveState(btnClicked){
@@ -283,8 +370,8 @@ export class Rule{
      */
     removeActiveState(){
         for(const btn of this.btns){
-            if(btn.html.classList.contains('active')){
-                btn.html.classList.remove('active');
+            if(btn.getHTML().classList.contains('active')){
+                btn.getHTML().classList.remove('active');
             }
             if(this.states.hasOwnProperty('active') && this.states.active.length){
                 let index; 
@@ -303,17 +390,19 @@ export class Rule{
 
     /**
      * * Check if the data validates and push it.
-     * @param {object} status - Filter status.
-     * @returns
+     * @param {Object} status Filter status.
+     * @param {Array} status.data Data filtered.
+     * @param {Boolean} status.valid If the filtration is valid or not.
+     * @returns {Object} The status.
      * @memberof Rule
      */
     checkDefaultData(status = {
         data: {},
         valid: true,
     }){
-        if(status.data.hasOwnProperty(this.properties.target)){
-            let value = status.data[this.properties.target];
-            if(this.properties.value != undefined){
+        if(status.data.hasOwnProperty(this.getTarget())){
+            let value = status.data[this.getTarget()];
+            if(this.getValue() != undefined){
                 if(this.comparateValues(value)){
                     status.valid = true;
                 }else{
@@ -329,18 +418,20 @@ export class Rule{
     }
 
     /**
-     * * Check if the data to for validates like a RegExp and push it.
-     * @param {object} status - Filter status.
-     * @returns
+     * * Check if the "Data to for" validates like a RegExp and push it.
+     * @param {Object} status Filter status.
+     * @param {Array} status.data Data filtered.
+     * @param {Boolean} status.valid If the filtration is valid or not.
+     * @returns {Object} The status.
      * @memberof Rule
      */
     checkRegExpData(status = {
         data: {},
         valid: true,
     }){
-        if(status.data.hasOwnProperty(this.properties.target)){
-            const value = status.data[this.properties.target];
-            let regexp = new RegExp(this.properties.value);
+        if(status.data.hasOwnProperty(this.getTarget())){
+            const value = status.data[this.getTarget()];
+            let regexp = new RegExp(this.getValue());
             if(regexp.exec(value)){
                 status.valid = true;
             }else{
@@ -352,18 +443,26 @@ export class Rule{
         return status;
     }
 
+    /**
+     * * Check if the data validates and push it.
+     * @param {Object} status Filter status.
+     * @param {Array} status.data Data filtered.
+     * @param {Boolean} status.valid If the filtration is valid or not.
+     * @returns {Object} The status.
+     * @memberof Rule
+     */
     checkSearchData(status = {
         data: {},
         valid: true,
     }){
         let found = false;
-        if(this.properties.value){
-            let targetToFor = this.properties.target.split(',');
+        if(this.getValue()){
+            let targetToFor = this.getTarget().split(',');
             for (const target of targetToFor) {
                 if(!found){
                     if(status.data.hasOwnProperty(target)){
                         const value = status.data[target];
-                        let regexp = new RegExp(this.properties.value.toLowerCase());
+                        let regexp = new RegExp(this.getValue().toLowerCase());
                         if(regexp.exec(String(value).toLowerCase())){
                             status.valid = true;
                             found = true;
@@ -383,7 +482,10 @@ export class Rule{
 
     /**
      * * Check if the data validates with a object and push it.
-     * @param {object} status - Filter status.
+     * @param {Object} status Filter status.
+     * @param {Array} status.data Data filtered.
+     * @param {Boolean} status.valid If the filtration is valid or not.
+     * @returns {Object} The status.
      * @memberof Rule
      */
     checkObjectData(status = {
@@ -392,16 +494,16 @@ export class Rule{
     }){
         let index = 0;
         let auxArray = [];
-        if(typeof this.properties.value == 'object'){
-            for(const rule_element of this.properties.value){
+        if(typeof this.getValue() == 'object'){
+            for(const rule_element of this.getValue()){
                 index++;
                 auxArray[index] = null;
                 if(auxArray[index] || auxArray[index] == null){
                     for(const rule_key in rule_element){
                         if(rule_element.hasOwnProperty(rule_key)){
                             const rule_value = rule_element[rule_key];
-                            if(status.data.hasOwnProperty(this.properties.target)){
-                                let elementByTarget = status.data[this.properties.target];
+                            if(status.data.hasOwnProperty(this.getTarget())){
+                                let elementByTarget = status.data[this.getTarget()];
                                 for(const data_element of elementByTarget){
                                     if(data_element.hasOwnProperty(rule_key)){
                                         const data_value = data_element[rule_key];
@@ -430,53 +532,5 @@ export class Rule{
             }
         }
         return status;
-    }
-    
-    checkCorrectObjectData(rule, dataToFor){
-        let spliceElements = [];
-        for(const rule_key in rule){
-            if(rule.hasOwnProperty(rule_key)){
-                const rule_value = rule[rule_key];
-                let index = 0;
-                for(const data of dataToFor){
-                    if(data.hasOwnProperty(this.properties.target)){
-                        let splice = true;
-                        let elementByTarget = data[this.properties.target];
-                        for(const data_element of elementByTarget){
-                            if(data_element.hasOwnProperty(rule_key)){
-                                const data_value = data_element[rule_key];
-                                if(this.comparateValues(data_value, rule_value)){
-                                    splice = false;
-                                }
-                            }
-                        }
-                        if(splice){
-                            spliceElements.push(index);
-                        }
-                        index++;
-                    }
-                }
-            }
-        }
-        let auxData = [];
-        for(const position in dataToFor){
-            if(dataToFor.hasOwnProperty(position)){
-                const data = dataToFor[position];
-                if(spliceElements.length){
-                    let push = true;
-                    for(const index of spliceElements){
-                        if(index == position){
-                            push = false;
-                        }
-                    }
-                    if(push){
-                        auxData.push(data);
-                    }
-                }else{
-                    auxData.push(data);
-                }
-            }
-        }
-        return auxData;
     }
 }

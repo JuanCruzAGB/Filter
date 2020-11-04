@@ -6,8 +6,8 @@
 export class Order{
     /**
      * * Creates an instance of Order.
-     * @param {HTMLElement} html - Filter Order HTML Element.
-     * @param {Filter} filter - Filter.
+     * @param {HTMLElement} html Filter Order button HTML Element.
+     * @param {Filter} filter Parent Filter.
      * @memberof Order
      */
     constructor(html = undefined, filter = undefined){
@@ -27,14 +27,32 @@ export class Order{
     }
 
     /**
+     * * Returns the Order properties.
+     * @returns {Object} The Order properties.
+     * @memberof Order
+     */
+    getProperties(){
+        return this.properties;
+    }
+
+    /**
      * * Set the Order by.
      * @memberof Order
      */
     setBy(){
         this.properties.by = undefined;
-        if(this.html.dataset.by){
-            this.properties.by = this.html.dataset.by;
+        if(this.getHTML().dataset.by){
+            this.properties.by = this.getHTML().dataset.by;
         }
+    }
+
+    /**
+     * * Returns the Order by.
+     * @returns {String} The Order by.
+     * @memberof Order
+     */
+    getBy(){
+        return this.properties.by;
     }
 
     /**
@@ -43,19 +61,28 @@ export class Order{
      */
     setType(){
         this.properties.type = 'ASC';
-        if(this.html.dataset.type){
-            this.properties.type = this.html.dataset.type.toUpperCase();
+        if(this.getHTML().dataset.type){
+            this.properties.type = this.getHTML().dataset.type.toUpperCase();
         }
     }
 
     /**
+     * * Returns the Order type.
+     * @returns {String} The Order type.
+     * @memberof Order
+     */
+    getType(){
+        return this.properties.type;
+    }
+
+    /**
      * * Set the Order HTML Element.
-     * @param {HTMLElement} html - Filter Order HTML Element.
+     * @param {HTMLElement} html Filter Order button HTML Element.
      * @memberof Order
      */
     setHTML(html = undefined){
         this.html = html;
-        for (const child of this.html.children) {
+        for (const child of this.getHTML().children) {
             if(child.classList.contains('filter-icon')){
                 this.icon = child;
             }
@@ -63,13 +90,22 @@ export class Order{
     }
 
     /**
+     * * Returns the Order HTML Element.
+     * @returns {HTMLElement} The Order HTML Element.
+     * @memberof Order
+     */
+    getHTML(){
+        return this.html;
+    }
+
+    /**
      * * Set the HTML Element event.
-     * @param {Filter} filter - Filter.
+     * @param {Filter} filter Parent Filter.
      * @memberof Order
      */
     setEvent(filter = undefined){
         let instance = this;
-        this.html.addEventListener('click', function(e){
+        this.getHTML().addEventListener('click', function(e){
             e.preventDefault();
             instance.changeType();
             if(instance.icon){
@@ -81,13 +117,13 @@ export class Order{
 
     /**
      * * Execute the Filter changeOrder function.
-     * @param {FIlter} filter - Filter.
+     * @param {Filter} filter Parent Filter.
      * @memberof Order
      */
     change(filter = undefined){
         filter.changeOrder({
-            by: this.properties.by,
-            type: this.properties.type,
+            by: this.getBy(),
+            type: this.getType(),
         });
         filter.executeEvent();
     }
@@ -97,12 +133,12 @@ export class Order{
      * @memberof Order
      */
     changeType(){
-        if(this.properties.type == 'ASC'){
+        if(this.getType() == 'ASC'){
             this.properties.type = 'DESC';
-            this.html.dataset.type = 'DESC';
-        }else if(this.properties.type == 'DESC'){
+            this.getHTML().dataset.type = 'DESC';
+        }else if(this.getType() == 'DESC'){
             this.properties.type = 'ASC';
-            this.html.dataset.type = 'ASC';
+            this.getHTML().dataset.type = 'ASC';
         }
     }
 
