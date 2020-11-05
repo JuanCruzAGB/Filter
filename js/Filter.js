@@ -1,4 +1,4 @@
-// * Filter repository.
+// * FilterJS repository.
 import { Rule } from "./Rule.js";
 import { Order } from "./Order.js";
 
