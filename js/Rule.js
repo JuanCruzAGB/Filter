@@ -297,7 +297,7 @@ export class Rule{
     changeValue(name = undefined, inputName = undefined){
         for(const btn of this.btns){
             if(btn.getName() == name){
-                switch(btn.properties.type){
+                switch(btn.getType()){
                     case 'search':
                         if(btn.getHTML().value){
                             this.properties.value = btn.getHTML().value;
@@ -456,25 +456,44 @@ export class Rule{
         valid: true,
     }){
         let found = false;
-        if(this.getValue()){
+        if (this.getValue()) {
             let targetToFor = this.getTarget().split(',');
             for (const target of targetToFor) {
                 if(!found){
-                    if(status.data.hasOwnProperty(target)){
+                    if (status.data.hasOwnProperty(target)) {
                         const value = status.data[target];
                         let regexp = new RegExp(this.getValue().toLowerCase());
-                        if(regexp.exec(String(value).toLowerCase())){
+                        if (regexp.exec(String(value).toLowerCase())) {
                             status.valid = true;
                             found = true;
-                        }else{
+                        } else {
                             status.valid = false;
                         }
-                    }else{
+                    } else if (/:/.exec(target)) {
+                        let element = target.split(':')[0];
+                        let column = target.split(':')[1];
+                        if (status.data.hasOwnProperty(element)) {
+                            if (status.data[element].hasOwnProperty(column)) {
+                                const value = status.data[element][column];
+                                let regexp = new RegExp(this.getValue().toLowerCase());
+                                if (regexp.exec(String(value).toLowerCase())) {
+                                    status.valid = true;
+                                    found = true;
+                                } else {
+                                    status.valid = false;
+                                }
+                            } else {
+                                status.valid = false;
+                            }
+                        } else {
+                            status.valid = false;
+                        }
+                    } else {
                         status.valid = false;
                     }
                 }
             }
-        }else{
+        } else {
             status.valid = true;
         }
         return status;

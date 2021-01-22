@@ -460,7 +460,7 @@ export class Filter{
      * @memberof Filter
      */
     executeEvent(button = undefined){
-        if(this.properties.hasOwnProperty('event')){
+        if (this.properties.hasOwnProperty('event')) {
             let params = this.getEvent().params;
             params.executedBy = button;
             this.checkResetOnRule(button);
