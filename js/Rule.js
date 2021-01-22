@@ -297,7 +297,7 @@ export class Rule{
     changeValue(name = undefined, inputName = undefined){
         for(const btn of this.btns){
             if(btn.getName() == name){
-                switch(btn.type){
+                switch(btn.properties.type){
                     case 'search':
                         if(btn.getHTML().value){
                             this.properties.value = btn.getHTML().value;
