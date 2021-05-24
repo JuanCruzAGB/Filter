@@ -1,182 +1,38 @@
-// * Filter repository.
-import { Button } from "./Button.js";
+// ? JuanCruzAGB repository
+import Class from "../../JuanCruzAGB/js/Class.js"
+
+// ? Filter repository.
+import Control from "./Control.js";
 
 /**
  * * Rule controls the Filter rules.
  * @export
  * @class Rule
+ * @author Juan Cruz Armentia <juancamentia@Gmail.com>
+ * @extends Class
  */
-export class Rule{
+export class Rule extends  Class {
     /**
-     * * Creates an instance of Rule.
-     * @param {Object} properties Rules Properties.
-     * @param {String} properties.type Type of Rule.
-     * @param {String} properties.target Rule target.
-     * @param {String} properties.comparator Type of comparation.
-     * @param {*} properties.value Rule default Value.
+     * * Creates an instance of Rule. 
+     * @param {object} [props] Rules properties:
+     * @param {string} [props.id='rule-1'] Rule primary key.
+     * @param {string} [props.target=false] Rule target.
+     * @param {string} [props.comparator='==='] Type of comparation.
+     * @param {*} [props.value=null] Rule default Value.
+     * @param {boolean} [props.strict=true] If the comparation should be strict.
      * @param {Filter} filter Parent Filter.
      * @memberof Rule
      */
-    constructor(properties = {
-        type: undefined,
-        target: undefined,
-        comparator: '=',
-        value: undefined,
-    }, filter = undefined){
-        this.setProperties(properties);
-        this.setStates();
-        this.setButton(filter);
-    }
-
-    /**
-     * * Set the Rule properties.
-     * @param {Object} properties Rules Properties.
-     * @param {String} properties.type Type of Rule.
-     * @param {String} properties.target Rule target.
-     * @param {String} properties.comparator Type of comparation.
-     * @param {*} properties.value Rule default Value.
-     * @memberof Rule
-     */
-    setProperties(properties = {
-        type: undefined,
-        target: undefined,
-        comparator: '=',
-        value: undefined,
-    }){
-        this.properties = {};
-        this.originalProperties = {};
-        this.setType(properties);
-        this.setTarget(properties);
-        this.setComparator(properties);
-        this.setValue(properties);
-    }
-
-    /**
-     * * Returns the Rule properties.
-     * @returns {Object} The Rule properties.
-     * @memberof Rule
-     */
-    getProperties(){
-        return this.properties;
-    }
-
-    /**
-     * * Set the Rule states.
-     * @memberof Rule
-     */
-    setStates(){
-        this.states = {};
-    }
-
-    /**
-     * * Returns the Rule states.
-     * @returns {Object} The Rule states.
-     * @memberof Rule
-     */
-    getStates(){
-        return this.states;
-    }
-
-    /**
-     * * Set the Rule type.
-     * @param {Object} properties Rules Properties.
-     * @param {String} properties.type Type of Rule.
-     * @memberof Rule
-     */
-    setType(properties = {
-        type: undefined,
-    }){
-        if (properties.hasOwnProperty('type')) {
-            this.properties.type = properties.type;
-        } else {
-            this.properties.type = undefined;
-        }
-    }
-
-    /**
-     * * Returns the Rule type.
-     * @returns {String} The Rule type.
-     * @memberof Rule
-     */
-    getType(){
-        return this.properties.type;
-    }
-
-    /**
-     * * Set the Rule target.
-     * @param {Object} properties Rules Properties.
-     * @param {String} properties.target Rule target.
-     * @memberof Rule
-     */
-    setTarget(properties = {
-        target: undefined,
-    }){
-        if (properties.hasOwnProperty('target')) {
-            this.properties.target = properties.target;
-        } else {
-            this.properties.target = undefined;
-        }
-    }
-
-    /**
-     * * Returns the Rule target.
-     * @returns {String} The Rule target.
-     * @memberof Rule
-     */
-    getTarget(){
-        return this.properties.target;
-    }
-
-    /**
-     * * Set the Rule comparator.
-     * @param {Object} properties Rules Properties.
-     * @param {String} properties.comparator Type of comparation.
-     * @memberof Rule
-     */
-    setComparator(properties = {
-        comparator: '=',
-    }){
-        if (properties.hasOwnProperty('comparator')) {
-            this.properties.comparator = properties.comparator;
-        } else {
-            this.properties.comparator = '=';
-        }
-    }
-
-    /**
-     * * Returns the Rule comparator.
-     * @returns {String} The Type of comparation.
-     * @memberof Rule
-     */
-    getComparator(){
-        return this.properties.comparator;
-    }
-
-    /**
-     * * Set the Rule value.
-     * @param {Object} properties Rules Properties.
-     * @param {*} properties.value Rule default Value.
-     * @memberof Rule
-     */
-    setValue(properties = {
-        value: undefined,
-    }){
-        if (properties.hasOwnProperty('value')) {
-            this.properties.value = properties.value;
-            this.originalProperties.value = properties.value;
-        } else {
-            this.properties.value = undefined;
-            this.originalProperties.value = undefined;
-        }
-    }
-
-    /**
-     * * Returns the Rule value.
-     * @returns {*} The Rule value.
-     * @memberof Rule
-     */
-    getValue(){
-        return this.properties.value;
+    constructor (props = {
+        id: 'rule-1',
+        target: false,
+        comparator: '===',
+        value: null,
+        strict: true,
+    }, filter) {
+        super({ ...Rule.props, ...props });
+        this.setProps('original', { ...this.props });
+        this.setControl(filter);
     }
 
     /**
@@ -184,372 +40,365 @@ export class Rule{
      * @param {Filter} filter Parent Filter.
      * @memberof Rule
      */
-    setButton(filter = undefined){
-        this.btns = Button.getHTML(this.getTarget(), this.getType(), this, filter);
-        for(const btn of this.btns){
-            if(btn.properties.regexp){
-                this.properties.regexp = true;
-            }
-        }
+    setControl(filter) {
+        this.control = Control.generate(this, filter);
     }
 
     /**
-     * * Returns the Rule buttons.
-     * @returns {Button[]} The Rule buttons.
+     * * Saves & returns the Rule value.
+     * @returns {*}
      * @memberof Rule
      */
-    getButton(){
-        return this.properties.btns;
-    }
-
-    /**
-     * * Returns the Rule RegExp.
-     * @returns {RegExp} The Rule "Is there a RegExp?" boolean.
-     * @memberof Rule
-     */
-    getRegExp(){
-        return this.properties.regexp;
+    getValue () {
+        this.setProps('value', this.control.props.value);
+        return this.props.value;
     }
 
     /**
      * * Check if the data validates.
-     * @param {Object} status Filter status.
-     * @param {Array} status.data Data filtered.
-     * @param {Boolean} status.valid If the filtration is valid or not.
-     * @returns {Object} The status.
+     * @param {object} [status] Filter status:
+     * @param {object} [status.data] Data filtered.
+     * @param {boolean} [status.valid=true] If the filtration is valid or not.
+     * @returns {object} The status.
      * @memberof Rule
      */
-    check(status = {
-        data: [],
+    check (status = {
+        data: {},
         valid: true,
-    }){
-        switch(this.getType()){
-            case 'checkbox':
-                status = this.checkObjectData(status);
-                break;
-            case 'search':
-                status = this.checkSearchData(status);
-                break;
-            default:
-                if(this.getRegExp()){
-                    status = this.checkRegExpData(status);
-                }else{   
-                    status = this.checkDefaultData(status);
+    }) {
+        if (this.getValue() !== null) {
+            for (const value of this.props.value) {
+                if (status.valid) {
+                    if (/\./.exec(this.props.target)) {
+                        status.valid = this.checkLevels(status.data, value);
+                    }
+                    if (!/\./.exec(this.props.target)) {
+                        if (typeof this.props.target === 'object') {
+                            status.valid = false;
+                            for (const target of this.props.target) {
+                                if (status.data.hasOwnProperty(target)) {
+                                    let statusValue = status.data[target];
+                                    if (this.comparate(statusValue, value)) {
+                                        status.valid = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (typeof this.props.target !== 'object') {
+                            if (status.data.hasOwnProperty(this.props.target)) {
+                                let statusValue = status.data[this.props.target];
+                                if (!this.comparate(statusValue, value)) {
+                                    status.valid = false;
+                                }
+                            }
+                            if (!status.data.hasOwnProperty(this.props.target)) {
+                                status.valid = false;
+                            }
+                        }
+                    }
                 }
-                break;
+            }
         }
         return status;
+    }
+
+    /**
+     * * Check the coincidence from data levels.
+     * @param {object} data Original data.
+     * @returns {boolean}
+     * @memberof Rule
+     */
+    checkLevels (data, value) {
+        let found = true, levels = this.props.target.split('.'), statusValue = data;
+        levels: for (const name of levels) {
+            if (/\:/.exec(name)) {
+                statusValue = this.parseArray(statusValue, name);
+                if (statusValue) {
+                    continue;
+                }
+            }
+            if (!/\:/.exec(name)) {
+                if (statusValue.length) {
+                    let array = [];
+                    array: for (const element of statusValue) {
+                        if (element.hasOwnProperty(name)) {
+                            array.push(element[name]);
+                        }
+                    }
+                    statusValue = array;
+                    continue;
+                }
+                if (!statusValue.length) {
+                    if (statusValue.hasOwnProperty(name)) {
+                        statusValue = statusValue[name];
+                        continue;
+                    }
+                }
+            }
+            found = false;
+            break;
+        }
+        if (found) {
+            if (statusValue.length) {
+                for (const element of statusValue) {
+                    if (!this.comparate(element, value)) {
+                        found = false;
+                        continue;
+                    }
+                    if (!this.props.strict) {
+                        found = true;
+                    }
+                }
+                if (found) {
+                    return true;
+                }
+                return false;
+            }
+            if (!statusValue.length) {
+                if (!this.comparate(statusValue, value)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (!found) {
+            return false;
+        }
+    }
+
+    /**
+     * * Comparates the values.
+     * @param {*} statusValue Value to comparate.
+     * @param {*} value Value to be comparated.
+     * @returns {boolean} If the comparation is true or false.
+     * @memberof Rule
+     */
+    comparate (statusValue, value) {
+        if (typeof statusValue === 'number') {
+            statusValue = statusValue + "";
+        }
+        if (typeof statusValue === 'string') {
+            statusValue = statusValue.toUpperCase();
+        }
+        if (typeof value === 'number') {
+            value = value + "";
+        }
+        if (typeof value === 'string') {
+            value = value.toUpperCase();
+        }
+        if (typeof value === 'object') {
+            if (new RegExp(value.regex.toUpperCase()).exec(statusValue)) {
+                return true;
+            }
+            return false;
+        }
+        switch (this.props.comparator) {
+            case '!=':
+                if (statusValue != value) {
+                    return true;
+                }
+                return false;
+            case '!==':
+                if (statusValue !== value) {
+                    return true;
+                }
+                return false;
+            case '==':
+                if (statusValue == value) {
+                    return true;
+                }
+                return false;
+            case '===':
+                if (statusValue === value) {
+                    return true;
+                }
+                return false;
+            case '>=':
+                if (statusValue >= value) {
+                    return true;
+                }
+                return false;
+            case '<=':
+                if (statusValue <= value) {
+                    return true;
+                }
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * * Parse & finds an array data.
+     * @param {object} data Data to for.
+     * @param {string} string Data to search.
+     * @returns {*}
+     * @memberof Rule
+     */
+    parseArray (data, string) {
+        let name = string.split(':')[0];
+        let position = string.split(':')[1];
+        let array = [];
+        if (data.length) {
+            for (const element of data) {
+                if (element.hasOwnProperty(name)) {
+                    element = element[name];
+                    if (/\*/.exec(position)) {
+                        for (const key in element) {
+                            if (Object.hasOwnProperty.call(element, key)) {
+                                array.push(element[key]);
+                            }
+                        }
+                    }
+                    if (/\[/.exec(position)) {
+                        position = position.split('[')[1].split(']')[0];
+                        if (/\,/.exec(position)) {
+                            position = position.split(',');
+                            for (const index of position) {
+                                for (const key in element) {
+                                    if (Object.hasOwnProperty.call(element, key)) {
+                                        if (parseInt(key) === parseInt(index)) {
+                                            array.push(element[key]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (/[0-9]/.exec(position)) {
+                        position = parseInt(position);
+                        for (const key in element) {
+                            if (Object.hasOwnProperty.call(element, key) && parseInt(key) === position) {
+                                array = element[key];
+                            }
+                        }
+                    }
+                }
+            }
+            return array;
+        }
+        if (!data.length) {
+            if (data.hasOwnProperty(name)) {
+                data = data[name];
+                if (/\*/.exec(position)) {
+                    for (const key in data) {
+                        if (Object.hasOwnProperty.call(data, key)) {
+                            array.push(data[key]);
+                        }
+                    }
+                    return array;
+                }
+                if (/\[/.exec(position)) {
+                    position = position.split('[')[1].split(']')[0];
+                    if (/\,/.exec(position)) {
+                        position = position.split(',');
+                        for (const index of position) {
+                            for (const key in data) {
+                                if (Object.hasOwnProperty.call(data, key)) {
+                                    if (parseInt(key) === parseInt(index)) {
+                                        array.push(data[key]);
+                                    }
+                                }
+                            }
+                        }
+                        return array;
+                    }
+                }
+                if (/[0-9]/.exec(position)) {
+                    position = parseInt(position);
+                    for (const key in data) {
+                        if (Object.hasOwnProperty.call(data, key) && parseInt(key) === position) {
+                            array = data[key];
+                        }
+                    }
+                    return array;
+                }
+            }
+        }
+        return false;
     }
 
     /**
      * * Reset the Rule.
      * @memberof Rule
      */
-    reset(){
-        this.properties.value = this.originalProperties.value;
-        for(const btn of this.btns){
+    reset () {
+        this.setProps('value', this.props.original.value);
+        for (const btn of this.control) {
             btn.reset(this);
         }
     }
 
     /**
-     * * Comparates the values.
-     * @param {*} data_value Data value to comparate.
-     * @param {*} rule_value Rule value to comparate.
-     * @returns {Boolean} If the comparation is true or false.
+     * * Generate all the Rules.
+     * @static
+     * @param {Filter} filter Parent Filter.
+     * @returns {Rules[]}
      * @memberof Rule
      */
-    comparateValues(data_value, rule_value = undefined){
-        switch(this.getComparator()){
-            case '=':
-                if(this.getValue() == data_value){
-                    return true;
-                }else if(rule_value == data_value && rule_value != undefined){
-                    return true;
-                }else{
-                    return false;
-                }
-            case '>':
-                if(this.getValue() > data_value){
-                    return true;
-                }else if(rule_value > data_value && rule_value != undefined){
-                    return true;
-                }else{
-                    return false;
-                }
-            case '<':
-                if(this.getValue() < data_value){
-                    return true;
-                }else if(rule_value < data_value && rule_value != undefined){
-                    return true;
-                }else{
-                    return false;
-                }
+    static generate (filter) {
+        let rules = [];
+        for (const key in filter.props.rules) {
+            if (Object.hasOwnProperty.call(filter.props.rules, key)) {
+                const props = filter.props.rules[key];
+                rules.push(new this(this.generateProps(key, props), filter));
+            }
         }
+        return rules;
     }
 
     /**
-     * * Change the Rule value.
-     * @param {String} name Button name.
-     * @param {String} inputName <input> name.
+     * * Generetes the Rule properties.
+     * @static
+     * @param {number} key Rule key.
+     * @param {string|object} props Properties to parse.
+     * @returns {object}
      * @memberof Rule
      */
-    changeValue(name = undefined, inputName = undefined){
-        for(const btn of this.btns){
-            if(btn.getName() == name){
-                switch(btn.getType()){
-                    case 'search':
-                        if(btn.getHTML().value){
-                            this.properties.value = btn.getHTML().value;
-                        }else{
-                            this.properties.value = undefined;
-                        }
-                        break;
-                    case 'checkbox':
-                        if(this.getValue() && this.getValue().length){
-                            let push = true, index;
-                            for(const key in this.properties.value){
-                                if(this.getValue().hasOwnProperty(key)){
-                                    const element = this.getValue()[key];
-                                    const forValue = element[[inputName]];
-                                    if(btn.getValue() == forValue){
-                                        push = false;
-                                        index = key;
-                                    }
-                                }
-                            }
-                            if(push){
-                                this.properties.value.push({[inputName]: btn.getValue()});
-                            }else{ 
-                                this.properties.value.splice(index, 1);
-                            }
-                        }else{
-                            this.properties.value = [];
-                            this.properties.value.push({[inputName]: btn.getValue()});
-                        }
-                        if(!this.getValue().length){
-                            this.properties.value = undefined;
-                        }
-                        break;
-                    case 'select':
-                        if(btn.getHTML().value){
-                            this.properties.value = btn.getHTML().value;
-                        }else{
-                            this.properties.value = undefined;
-                        }
-                        break;
-                    default:
-                        if(btn.getHTML().value){
-                            this.properties.value = btn.getHTML().value;
-                        }else{
-                            this.properties.value = undefined;
-                        }
-                        break;
-                }
+    static generateProps (key, props) {
+        if (typeof props === 'object') {
+            let properties = {
+                target: props[0],
+            };
+            if (props.hasOwnProperty(1)) {
+                properties.comparator = props[1];
             }
+            if (props.hasOwnProperty(2)) {
+                properties.value = props[2];
+            }
+            if (props.hasOwnProperty(3)) {
+                properties.strict = props[3];
+            }
+            return {
+                id: `rule-${ key }`,
+                ...properties,
+            };
         }
+        if (typeof props === 'boolean' && props) {
+            return {
+                id: `rule-${ key }`,
+                target: key,
+            };
+        }
+        return {
+            id: `rule-${ key }`,
+            target: props,
+        };
     }
 
-    /**
-     * * Set the Button active state.
-     * @param {HTMLElement} btnClicked Button clicked HTML Element.
-     * @memberof Rule
+    /** 
+     * @static
+     * @var {object} props Default props
      */
-    setActiveState(btnClicked){
-        this.removeActiveState();
-        btnClicked.classList.add('active');
-        if(!this.states.hasOwnProperty('active')){
-            this.states.active = [];
-        }
-        this.states.active.push(btnClicked);
-    }
-
-    /**
-     * * Remove the Button active state.
-     * @memberof Rule
-     */
-    removeActiveState(){
-        for(const btn of this.btns){
-            if(btn.getHTML().classList.contains('active')){
-                btn.getHTML().classList.remove('active');
-            }
-            if(this.states.hasOwnProperty('active') && this.states.active.length){
-                let index; 
-                for(const key in this.states.active){
-                    if(this.states.active.hasOwnProperty(key)){
-                        const active = this.states.active[key];
-                        if(btn == active){
-                            index = key;
-                        }
-                    }
-                }
-                this.states.active.splice(index, 1);
-            }
-        }
-    }
-
-    /**
-     * * Check if the data validates and push it.
-     * @param {Object} status Filter status.
-     * @param {Array} status.data Data filtered.
-     * @param {Boolean} status.valid If the filtration is valid or not.
-     * @returns {Object} The status.
-     * @memberof Rule
-     */
-    checkDefaultData(status = {
-        data: {},
-        valid: true,
-    }){
-        if(status.data.hasOwnProperty(this.getTarget())){
-            let value = status.data[this.getTarget()];
-            if(this.getValue() != undefined){
-                if(this.comparateValues(value)){
-                    status.valid = true;
-                }else{
-                    status.valid = false;
-                }
-            }else{
-                status.valid = true;
-            }
-        }else{
-            status.valid = false;
-        }
-        return status;
-    }
-
-    /**
-     * * Check if the "Data to for" validates like a RegExp and push it.
-     * @param {Object} status Filter status.
-     * @param {Array} status.data Data filtered.
-     * @param {Boolean} status.valid If the filtration is valid or not.
-     * @returns {Object} The status.
-     * @memberof Rule
-     */
-    checkRegExpData(status = {
-        data: {},
-        valid: true,
-    }){
-        if(status.data.hasOwnProperty(this.getTarget())){
-            const value = status.data[this.getTarget()];
-            let regexp = new RegExp(this.getValue());
-            if(regexp.exec(value)){
-                status.valid = true;
-            }else{
-                status.valid = false;
-            }
-        }else{
-            status.valid = false;
-        }
-        return status;
-    }
-
-    /**
-     * * Check if the data validates and push it.
-     * @param {Object} status Filter status.
-     * @param {Array} status.data Data filtered.
-     * @param {Boolean} status.valid If the filtration is valid or not.
-     * @returns {Object} The status.
-     * @memberof Rule
-     */
-    checkSearchData(status = {
-        data: {},
-        valid: true,
-    }){
-        let found = false;
-        if (this.getValue()) {
-            let targetToFor = this.getTarget().split(',');
-            for (const target of targetToFor) {
-                if(!found){
-                    if (status.data.hasOwnProperty(target)) {
-                        const value = status.data[target];
-                        let regexp = new RegExp(this.getValue().toLowerCase());
-                        if (regexp.exec(String(value).toLowerCase())) {
-                            status.valid = true;
-                            found = true;
-                        } else {
-                            status.valid = false;
-                        }
-                    } else if (/:/.exec(target)) {
-                        let element = target.split(':')[0];
-                        let column = target.split(':')[1];
-                        if (status.data.hasOwnProperty(element)) {
-                            if (status.data[element].hasOwnProperty(column)) {
-                                const value = status.data[element][column];
-                                let regexp = new RegExp(this.getValue().toLowerCase());
-                                if (regexp.exec(String(value).toLowerCase())) {
-                                    status.valid = true;
-                                    found = true;
-                                } else {
-                                    status.valid = false;
-                                }
-                            } else {
-                                status.valid = false;
-                            }
-                        } else {
-                            status.valid = false;
-                        }
-                    } else {
-                        status.valid = false;
-                    }
-                }
-            }
-        } else {
-            status.valid = true;
-        }
-        return status;
-    }
-
-    /**
-     * * Check if the data validates with a object and push it.
-     * @param {Object} status Filter status.
-     * @param {Array} status.data Data filtered.
-     * @param {Boolean} status.valid If the filtration is valid or not.
-     * @returns {Object} The status.
-     * @memberof Rule
-     */
-    checkObjectData(status = {
-        data: {},
-        valid: true,
-    }){
-        let index = 0;
-        let auxArray = [];
-        if(typeof this.getValue() == 'object'){
-            for(const rule_element of this.getValue()){
-                index++;
-                auxArray[index] = null;
-                if(auxArray[index] || auxArray[index] == null){
-                    for(const rule_key in rule_element){
-                        if(rule_element.hasOwnProperty(rule_key)){
-                            const rule_value = rule_element[rule_key];
-                            if(status.data.hasOwnProperty(this.getTarget())){
-                                let elementByTarget = status.data[this.getTarget()];
-                                for(const data_element of elementByTarget){
-                                    if(data_element.hasOwnProperty(rule_key)){
-                                        const data_value = data_element[rule_key];
-                                        if(this.comparateValues(data_value, rule_value)){
-                                            auxArray[index] = true;
-                                            break;
-                                        }else{
-                                            auxArray[index] = false;
-                                        }
-                                    }
-                                }
-                            }else{
-                                auxArray[index] = false;
-                            }
-                        }
-                    }
-                }
-            }
-            status.valid = true;
-            for (const aux of auxArray) {
-                if(aux != undefined){
-                    if(!aux){
-                        status.valid = false;
-                    }
-                }
-            }
-        }
-        return status;
+    static props = {
+        id: 'rule-1',
+        target: false,
+        comparator: '===',
+        value: null,
+        strict: true,
     }
 }
+
+// ? Default export
+export default Rule;

@@ -1,158 +1,199 @@
+// ? JuanCruzAGB repository
+import Class from "../../JuanCruzAGB/js/Class.js"
+
 /**
  * * Order controls the Filter Order.
  * @export
  * @class Order
+ * @author Juan Cruz Armentia <juancarmentia@gmail.com>
+ * @extends Class
  */
-export class Order{
+export class Order extends Class {
     /**
      * * Creates an instance of Order.
-     * @param {HTMLElement} html Filter Order button HTML Element.
+     * @param {object} [props] Order properties:
+     * @param {string} [props.id='order-1'] Order primary key.
+     * @param {array} [props.rules] Order rules.
+     * @param {object} [callbacks] Order callbacks:
+     * @param {object} [callback] Order callback:
+     * @param {function} [callback.function] Order callback function.
+     * @param {*} [callback.params] Order callback function params.
+     * @memberof Order
+     */
+    constructor (props = {
+        id: 'order-1',
+        rules: [],
+    }, callback = {
+        function: function (params) { /* console.log(params.result) */ },
+        params: {},
+    }) {
+        super({  ...Order.props, ...props });
+        this.setCallbacks({ default: { ...Order.callback, ...callback } });
+        this.parseRules();
+    }
+
+    /**
+     * * Set the Filter Rules.
+     * @memberof Filter
+     */
+    parseRules () {
+        let rules = [];
+        for (const rule of this.props.rules) {
+            rules.push({
+                by: (typeof rule === 'object' ? rule[0] : rule),
+                type: (typeof rule === 'object' ? rule[1] : 'ASC'),
+            });
+        }
+        this.setProps('rules', rules);
+    }
+
+    /**
+     * * Order the data.
+     * @returns {array} Data ordered.
+     * @memberof Filter
+     */
+    run (data = []) {
+        let result = data.sort(this.sort(this));
+        this.execute('default', {
+            result: result,
+        });
+        return result;
+    }
+
+    /**
+     * * The sort order function.
+     * @param {Order} order
+     * @returns {number} Data position.
+     * @memberof Filter
+     */
+    sort (order) {
+        return function (a, b) {
+            let index = 0;
+            for (const rule of order.props.rules) {
+                if (index === 0) {
+                    if (/\./.exec(rule.by)) {
+                        index = Order.parseLevels(a, b, rule);
+                    } else {
+                        if (a.hasOwnProperty(rule.by)) {
+                            let aValue = a[rule.by];
+                            if (b.hasOwnProperty(rule.by)) {
+                                let bValue = b[rule.by];
+                                if (typeof aValue === 'string') {
+                                    aValue = aValue.toUpperCase();
+                                    bValue = bValue.toUpperCase();
+                                }
+                                switch (rule.type.toUpperCase()) {
+                                    case 'ASC':
+                                        if (aValue < bValue) {
+                                            index = -1;
+                                        }
+                                        if (aValue > bValue) {
+                                            index = 1;
+                                        }
+                                        break;
+                                    case 'DESC':
+                                        if (aValue > bValue) {
+                                            index = -1;
+                                        }
+                                        if (aValue < bValue) {
+                                            index = 1;
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return index;
+        }
+    }
+
+    /**
+     * * Found a level inside an element.
+     * @static
+     * @param {object} element
+     * @param {array} levels
+     * @returns {object}
+     * @memberof Order
+     */
+    static foundLevels (element, levels) {
+        for (const name of levels) {
+            if (element.hasOwnProperty(name)) {
+                element = element[name];
+                continue;
+            }
+            return [false, false];
+        }
+        return [element, true];
+    }
+
+    /**
+     * * Generate all the Order.
+     * @static
      * @param {Filter} filter Parent Filter.
-     * @memberof Order
+     * @returns {Order}
+     * @memberof Rule
      */
-    constructor(html = undefined, filter = undefined){
-        this.setHTML(html);
-        this.setProperties();
-        this.setEvent(filter);
+    static generate (filter) {
+        return new this({
+            rules: filter.props.order,
+        }, { ...filter.callbacks.order, ...filter.callbacks.desc });
     }
 
     /**
-     * * Set the Order properties.
+     * * Parse the levels of an order and compare the values of 2 objects.
+     * @static
+     * @param {object} a First element
+     * @param {object} b Second element
+     * @param {object} rule Order rule
+     * @returns {number}
      * @memberof Order
      */
-    setProperties(){
-        this.properties = {};
-        this.setBy();
-        this.setType();
-    }
-
-    /**
-     * * Returns the Order properties.
-     * @returns {Object} The Order properties.
-     * @memberof Order
-     */
-    getProperties(){
-        return this.properties;
-    }
-
-    /**
-     * * Set the Order by.
-     * @memberof Order
-     */
-    setBy(){
-        this.properties.by = undefined;
-        if(this.getHTML().dataset.by){
-            this.properties.by = this.getHTML().dataset.by;
-        }
-    }
-
-    /**
-     * * Returns the Order by.
-     * @returns {String} The Order by.
-     * @memberof Order
-     */
-    getBy(){
-        return this.properties.by;
-    }
-
-    /**
-     * * Set the Order type.
-     * @memberof Order
-     */
-    setType(){
-        this.properties.type = 'ASC';
-        if(this.getHTML().dataset.type){
-            this.properties.type = this.getHTML().dataset.type.toUpperCase();
-        }
-    }
-
-    /**
-     * * Returns the Order type.
-     * @returns {String} The Order type.
-     * @memberof Order
-     */
-    getType(){
-        return this.properties.type;
-    }
-
-    /**
-     * * Set the Order HTML Element.
-     * @param {HTMLElement} html Filter Order button HTML Element.
-     * @memberof Order
-     */
-    setHTML(html = undefined){
-        this.html = html;
-        for (const child of this.getHTML().children) {
-            if(child.classList.contains('filter-icon')){
-                this.icon = child;
+    static parseLevels (a, b, rule) {
+        let aValue = a, aFound = true;
+        let response = this.foundLevels(aValue, rule.by.split('.'));
+        aValue = response[0];
+        aFound = response[1];
+        if (aFound) {
+            let bValue = b, bFound = true;
+            response = this.foundLevels(bValue, rule.by.split('.'));
+            bValue = response[0];
+            bFound = response[1];
+            if (bFound) {
+                if (typeof aValue === 'string') {
+                    aValue = aValue.toUpperCase();
+                    bValue = bValue.toUpperCase();
+                }
+                if (aValue < bValue) {
+                    return -1;
+                }
+                if (aValue > bValue) {
+                    return 1;
+                }
             }
         }
+        return 0;
     }
 
-    /**
-     * * Returns the Order HTML Element.
-     * @returns {HTMLElement} The Order HTML Element.
-     * @memberof Order
+    /** 
+     * @static
+     * @var {object} props Default props
      */
-    getHTML(){
-        return this.html;
+    static props = {
+        id: 'order-1',
+        rules: [],
     }
-
-    /**
-     * * Set the HTML Element event.
-     * @param {Filter} filter Parent Filter.
-     * @memberof Order
+    
+    /** 
+     * @static
+     * @var {object} callback Default callbacks
      */
-    setEvent(filter = undefined){
-        let instance = this;
-        this.getHTML().addEventListener('click', function(e){
-            e.preventDefault();
-            instance.changeType();
-            if(instance.icon){
-                instance.changeIcon();
-            }
-            instance.change(filter);
-        });
-    }
-
-    /**
-     * * Execute the Filter changeOrder function.
-     * @param {Filter} filter Parent Filter.
-     * @memberof Order
-     */
-    change(filter = undefined){
-        filter.changeOrder({
-            by: this.getBy(),
-            type: this.getType(),
-        });
-        filter.executeEvent();
-    }
-
-    /**
-     * * Change the HTML Element type.
-     * @memberof Order
-     */
-    changeType(){
-        if(this.getType() == 'ASC'){
-            this.properties.type = 'DESC';
-            this.getHTML().dataset.type = 'DESC';
-        }else if(this.getType() == 'DESC'){
-            this.properties.type = 'ASC';
-            this.getHTML().dataset.type = 'ASC';
-        }
-    }
-
-    /**
-     * * Change the Filter icon.
-     * @memberof Order
-     */
-    changeIcon(){
-        if(this.icon.classList.contains('fa-chevron-up')){
-            this.icon.classList.remove('fa-chevron-up');
-            this.icon.classList.add('fa-chevron-down');
-        }else if(this.icon.classList.contains('fa-chevron-down')){
-            this.icon.classList.remove('fa-chevron-down');
-            this.icon.classList.add('fa-chevron-up');
-        }
+    static callback = {
+        function: function (params) { /* console.log(params.result) */ },
+        params: {},
     }
 }
+
+// ? Default export
+export default Order;
