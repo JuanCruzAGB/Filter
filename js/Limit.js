@@ -28,15 +28,20 @@ export class Limit extends Class {
      */
     run (data = []) {
         let result = [];
-        for (const key in data) {
-            if (Object.hasOwnProperty.call(data, key)) {
-                const entry = data[key];
-                if (!entry.length) {
-                    if (parseInt(key) < this.props.length) {
-                        result.push(entry);
+        if (this.props.length) {
+            for (const key in data) {
+                if (Object.hasOwnProperty.call(data, key)) {
+                    const entry = data[key];
+                    if (!entry.length) {
+                        if (parseInt(key) < this.props.length) {
+                            result.push(entry);
+                        }
                     }
                 }
             }
+        }
+        if (!this.props.length) {
+            result = data; 
         }
         this.execute('default', {
             result: result,

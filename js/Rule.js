@@ -69,23 +69,32 @@ export class Rule extends  Class {
         if (this.getValue() !== null) {
             for (const value of this.props.value) {
                 if (status.valid) {
-                    if (/\./.exec(this.props.target)) {
-                        status.valid = this.checkLevels(status.data, value);
-                    }
-                    if (!/\./.exec(this.props.target)) {
-                        if (typeof this.props.target === 'object') {
-                            status.valid = false;
-                            for (const target of this.props.target) {
+                    if (typeof this.props.target === 'object') {
+                        status.valid = false;
+                        for (const target of this.props.target) {
+                            if (/\./.exec(target)) {
+                                let valid = this.checkLevels(status.data, target, value);
+                                if (valid) {
+                                    status.valid = valid;
+                                }
+                                continue;
+                            }
+                            if (!/\./.exec(target)) {
                                 if (status.data.hasOwnProperty(target)) {
                                     let statusValue = status.data[target];
                                     if (this.comparate(statusValue, value)) {
                                         status.valid = true;
-                                        break;
+                                        continue;
                                     }
                                 }
                             }
                         }
-                        if (typeof this.props.target !== 'object') {
+                    }
+                    if (typeof this.props.target !== 'object') {
+                        if (/\./.exec(this.props.target)) {
+                            status.valid = this.checkLevels(status.data, this.props.target, value);
+                        }
+                        if (!/\./.exec(this.props.target)) {
                             if (status.data.hasOwnProperty(this.props.target)) {
                                 let statusValue = status.data[this.props.target];
                                 if (!this.comparate(statusValue, value)) {
@@ -106,12 +115,14 @@ export class Rule extends  Class {
     /**
      * * Check the coincidence from data levels.
      * @param {object} data Original data.
+     * @param {string} target Target to split.
+     * @param {*} value Value to compare.
      * @returns {boolean}
      * @memberof Rule
      */
-    checkLevels (data, value) {
-        let found = true, levels = this.props.target.split('.'), statusValue = data;
-        levels: for (const name of levels) {
+    checkLevels (data, target, value) {
+        let found = true, levels = target.split('.'), statusValue = data;
+        for (const name of levels) {
             if (/\:/.exec(name)) {
                 statusValue = this.parseArray(statusValue, name);
                 if (statusValue) {
@@ -121,7 +132,7 @@ export class Rule extends  Class {
             if (!/\:/.exec(name)) {
                 if (statusValue.length) {
                     let array = [];
-                    array: for (const element of statusValue) {
+                    for (const element of statusValue) {
                         if (element.hasOwnProperty(name)) {
                             array.push(element[name]);
                         }
@@ -140,7 +151,7 @@ export class Rule extends  Class {
             break;
         }
         if (found) {
-            if (statusValue.length) {
+            if (typeof statusValue === 'object') {
                 for (const element of statusValue) {
                     if (!this.comparate(element, value)) {
                         found = false;
@@ -155,7 +166,7 @@ export class Rule extends  Class {
                 }
                 return false;
             }
-            if (!statusValue.length) {
+            if (typeof statusValue !== 'object') {
                 if (!this.comparate(statusValue, value)) {
                     return false;
                 }
@@ -179,13 +190,15 @@ export class Rule extends  Class {
             statusValue = statusValue + "";
         }
         if (typeof statusValue === 'string') {
-            statusValue = statusValue.toUpperCase();
+            statusValue = this.removeWeirdLetters(statusValue);
         }
         if (typeof value === 'number') {
             value = value + "";
         }
         if (typeof value === 'string') {
-            value = value.toUpperCase();
+            console.log(value);
+            value = this.removeWeirdLetters(value);
+            console.log(value);
         }
         if (typeof value === 'object') {
             if (new RegExp(value.regex.toUpperCase()).exec(statusValue)) {
@@ -250,29 +263,52 @@ export class Rule extends  Class {
                                 array.push(element[key]);
                             }
                         }
+                        continue;
                     }
                     if (/\[/.exec(position)) {
                         position = position.split('[')[1].split(']')[0];
                         if (/\,/.exec(position)) {
                             position = position.split(',');
-                            for (const index of position) {
-                                for (const key in element) {
-                                    if (Object.hasOwnProperty.call(element, key)) {
-                                        if (parseInt(key) === parseInt(index)) {
-                                            array.push(element[key]);
+                            if (/^[0-9]/.exec(position[0])) {
+                                for (const index of position) {
+                                    for (const key in element) {
+                                        if (Object.hasOwnProperty.call(element, key)) {
+                                            if (parseInt(key) === parseInt(index)) {
+                                                array.push(element[key]);
+                                            }
                                         }
+                                    }
+                                }
+                                continue;
+                            }
+                            for (const index of position) {
+                                for (const key of element) {
+                                    if (key === index) {
+                                        array.push(element[key]);
                                     }
                                 }
                             }
                         }
+                        continue;
                     }
-                    if (/[0-9]/.exec(position)) {
+                    if (/^[0-9]/.exec(position)) {
                         position = parseInt(position);
                         for (const key in element) {
                             if (Object.hasOwnProperty.call(element, key) && parseInt(key) === position) {
                                 array = element[key];
                             }
                         }
+                        continue;
+                    } else {
+                        for (const key in element) {
+                            if (Object.hasOwnProperty.call(element, key)) {
+                                const object = element[key];
+                                if (key === position) {
+                                    array = object;
+                                }
+                            }
+                        }
+                        continue;
                     }
                 }
             }
@@ -293,19 +329,29 @@ export class Rule extends  Class {
                     position = position.split('[')[1].split(']')[0];
                     if (/\,/.exec(position)) {
                         position = position.split(',');
-                        for (const index of position) {
-                            for (const key in data) {
-                                if (Object.hasOwnProperty.call(data, key)) {
-                                    if (parseInt(key) === parseInt(index)) {
-                                        array.push(data[key]);
+                        if (/^[0-9]/.exec(position[0])) {
+                            for (const index of position) {
+                                for (const key in data) {
+                                    if (Object.hasOwnProperty.call(data, key)) {
+                                        if (parseInt(key) === parseInt(index)) {
+                                            array.push(data[key]);
+                                        }
                                     }
                                 }
                             }
+                            return array;
                         }
-                        return array;
+                        for (const index of position) {
+                            for (const key of data) {
+                                if (key === index) {
+                                    array.push(data[key]);
+                                }
+                            }
+                        }
                     }
+                    return array;
                 }
-                if (/[0-9]/.exec(position)) {
+                if (/^[0-9]/.exec(position)) {
                     position = parseInt(position);
                     for (const key in data) {
                         if (Object.hasOwnProperty.call(data, key) && parseInt(key) === position) {
@@ -313,10 +359,44 @@ export class Rule extends  Class {
                         }
                     }
                     return array;
+                } else {
+                    for (const key in data) {
+                        if (Object.hasOwnProperty.call(data, key)) {
+                            const element = data[key];
+                            if (key === position) {
+                                array = element;
+                            }
+                        }
+                    }
+                    return array;
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * * Removes the vocal accents
+     * @param {string} string
+     * @returns {string}
+     * @memberof Rule
+     */
+    removeWeirdLetters (string = '') {
+        const map = {
+            'A': 'À|Á|Ã|Â|Ä',
+            'E': 'É|È|Ê|Ë',
+            'I': 'Í|Ì|Î|Ï',
+            'O': 'Ó|Ò|Ô|Õ|Ö',
+            'U': 'Ú|Ù|Û|Ü',
+            'C': 'Ç',
+            'N': 'Ñ'
+        };
+    
+        for (var pattern in map) {
+            string = string.toUpperCase().replace(new RegExp(map[pattern], 'g'), pattern);
+        }
+    
+        return string;
     }
 
     /**

@@ -20,10 +20,7 @@ export class Filter extends Class {
      * * Creates an instance of Filter.
      * @param {object} [props] Filter properties:
      * @param {string} [props.id='filter-1'] Filter primary key.
-     * @param {object} [props.order] Order properties:
-     * @param {string} [props.order.by=false] Element to order by.
-     * @param {string} [props.order.type='DESC'] Type of order.
-     * @param {HTMLElement} [props.order.btn=false] If the order has buttons.
+     * @param {array} [props.order=[]] Order properties.
      * @param {number} [props.limit=false] Maximum amount of filtered data to display.
      * @param {array} [props.rules=[]] Filter rules.
      * @param {object} [state] Filter states.
