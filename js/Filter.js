@@ -100,6 +100,15 @@ export class Filter extends Class {
     }
 
     /**
+     * * Change the Filter data.
+     * @param {*} [data=[]] Data to filter.
+     * @memberof Filter
+     */
+    changeData (data) {
+        this.setData(data);
+    }
+
+    /**
      * * Load the following amount of data.
      * @returns {array} Next result row data.
      * @memberof Filter
