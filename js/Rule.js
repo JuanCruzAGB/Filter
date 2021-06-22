@@ -196,9 +196,9 @@ export class Rule extends  Class {
             value = value + "";
         }
         if (typeof value === 'string') {
-            console.log(value);
+            // console.log(value);
             value = this.removeWeirdLetters(value);
-            console.log(value);
+            // console.log(value);
         }
         if (typeof value === 'object') {
             if (new RegExp(value.regex.toUpperCase()).exec(statusValue)) {
