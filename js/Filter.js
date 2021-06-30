@@ -181,14 +181,14 @@ export class Filter extends Class {
                 for (const data of this.data) {
                     let status = {
                         data: data,
-                        valid: true,
+                        valid: null,
                     };
                     for (const rule of this.props.rules) {
-                        if (status.valid) {
+                        if (status.valid || status.valid === null) {
                             status = rule.check(status);
                         }
                     }
-                    if (status.valid) {
+                    if (status.valid || status.valid === null) {
                         this.result.push(status.data);
                     }
                 }

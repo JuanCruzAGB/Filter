@@ -1,5 +1,6 @@
 // ? JuanCruzAGB repository
 import Class from "../../JuanCruzAGB/js/Class.js"
+import Validation from "../../ValidationJS/js/Validation.js";
 
 // ? Filter repository.
 import Control from "./Control.js";
@@ -26,7 +27,7 @@ export class Rule extends  Class {
     constructor (props = {
         id: 'rule-1',
         target: false,
-        comparator: '===',
+        comparator: '==',
         value: null,
         strict: true,
     }, filter) {
@@ -68,14 +69,15 @@ export class Rule extends  Class {
     }) {
         if (this.getValue() !== null) {
             for (const value of this.props.value) {
-                if (status.valid) {
+                let valid = true;
+                if (((status.valid || status.valid === null) && this.props.strict) || (!this.props.strict)) {
                     if (typeof this.props.target === 'object') {
-                        status.valid = false;
+                        valid = false;
                         for (const target of this.props.target) {
                             if (/\./.exec(target)) {
-                                let valid = this.checkLevels(status.data, target, value);
+                                valid = this.checkLevels(status.data, target, value);
                                 if (valid) {
-                                    status.valid = valid;
+                                    valid = valid;
                                 }
                                 continue;
                             }
@@ -83,7 +85,7 @@ export class Rule extends  Class {
                                 if (status.data.hasOwnProperty(target)) {
                                     let statusValue = status.data[target];
                                     if (this.comparate(statusValue, value)) {
-                                        status.valid = true;
+                                        valid = true;
                                         continue;
                                     }
                                 }
@@ -92,21 +94,27 @@ export class Rule extends  Class {
                     }
                     if (typeof this.props.target !== 'object') {
                         if (/\./.exec(this.props.target)) {
-                            status.valid = this.checkLevels(status.data, this.props.target, value);
+                            valid = this.checkLevels(status.data, this.props.target, value);
                         }
                         if (!/\./.exec(this.props.target)) {
                             if (status.data.hasOwnProperty(this.props.target)) {
                                 let statusValue = status.data[this.props.target];
                                 if (!this.comparate(statusValue, value)) {
-                                    status.valid = false;
+                                    valid = false;
                                 }
                             }
                             if (!status.data.hasOwnProperty(this.props.target)) {
-                                status.valid = false;
+                                valid = false;
                             }
                         }
                     }
                 }
+                if (!this.props.strict) {
+                    if (status.valid) {
+                        valid = true;
+                    }
+                }
+                status.valid = valid;
             }
         }
         return status;
@@ -151,17 +159,21 @@ export class Rule extends  Class {
             break;
         }
         if (found) {
+            found = null;
             if (typeof statusValue === 'object') {
                 for (const element of statusValue) {
+                    let valid = true;
                     if (!this.comparate(element, value)) {
-                        found = false;
-                        continue;
+                        valid = false;
                     }
                     if (!this.props.strict) {
-                        found = true;
+                        if (found) {
+                            valid = true;
+                        }
                     }
+                    found = valid;
                 }
-                if (found) {
+                if (found || found === null) {
                     return true;
                 }
                 return false;
@@ -196,9 +208,7 @@ export class Rule extends  Class {
             value = value + "";
         }
         if (typeof value === 'string') {
-            // console.log(value);
             value = this.removeWeirdLetters(value);
-            // console.log(value);
         }
         if (typeof value === 'object') {
             if (new RegExp(value.regex.toUpperCase()).exec(statusValue)) {
@@ -228,12 +238,12 @@ export class Rule extends  Class {
                 }
                 return false;
             case '>=':
-                if (statusValue >= value) {
+                if (parseInt(statusValue) >= parseInt(value)) {
                     return true;
                 }
                 return false;
             case '<=':
-                if (statusValue <= value) {
+                if (parseInt(statusValue) <= parseInt(value)) {
                     return true;
                 }
                 return false;
@@ -254,7 +264,7 @@ export class Rule extends  Class {
         let position = string.split(':')[1];
         let array = [];
         if (data.length) {
-            for (const element of data) {
+            for (let element of data) {
                 if (element.hasOwnProperty(name)) {
                     element = element[name];
                     if (/\*/.exec(position)) {
@@ -474,7 +484,7 @@ export class Rule extends  Class {
     static props = {
         id: 'rule-1',
         target: false,
-        comparator: '===',
+        comparator: '==',
         value: null,
         strict: true,
     }

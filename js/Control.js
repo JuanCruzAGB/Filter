@@ -71,6 +71,7 @@ export class Control extends Class {
                                 filter.run();
                             })
                             break;
+                        case 'NUMBER':
                         case 'SEARCH':
                             html.addEventListener('keyup', function (e) {
                                 instance.setValue();
@@ -103,10 +104,10 @@ export class Control extends Class {
                     switch (html.type.toUpperCase()) {
                         case 'CHECKBOX':
                             if (html.checked) {
-                                console.log(html.value);
                                 this.props.value.push(html.value);
                             }
                             break;
+                        case 'NUMBER':
                         case 'RANGE':
                             this.props.value.push(html.value);
                             break;
