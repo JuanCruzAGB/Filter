@@ -1,7 +1,7 @@
 // ? JuanCruzAGB repository
 import Class from "../../JuanCruzAGB/js/Class.js";
 
-export class Limit extends Class {
+export default class Limit extends Class {
     /**
      * * Creates an instance of Limit.
      * @param {object} [props] Limit properties:
@@ -79,6 +79,3 @@ export class Limit extends Class {
         params: {},
     }
 }
-
-// ? Default export
-export default Limit;

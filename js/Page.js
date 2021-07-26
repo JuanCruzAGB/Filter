@@ -1,7 +1,7 @@
 // ? JuanCruzAGB repository
 import Class from "../../JuanCruzAGB/js/Class.js";
 
-export class Page extends Class {
+export default class Page extends Class {
     /**
      * * Creates an instance of Page.
      * @param {object} [props] Page properties:
@@ -118,6 +118,3 @@ export class Page extends Class {
         params: {},
     }
 }
-
-// ? Default export
-export default Page;

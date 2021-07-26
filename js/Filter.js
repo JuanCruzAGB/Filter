@@ -2,7 +2,7 @@
 import Class from "../../JuanCruzAGB/js/Class.js"
 
 // ? FilterJS repository.
-import Control from "./Control.js";
+import Input from "./Input.js";
 import Limit from "./Limit.js";
 import Order from "./Order.js";
 import Page from "./Page.js";
@@ -15,32 +15,32 @@ import Rule from "./Rule.js";
  * @author Juan Cruz Armentia <juancarmentia@gmail.com>
  * @extends Class
  */
-export class Filter extends Class {
+export default class Filter extends Class {
     /**
      * * Creates an instance of Filter.
-     * @param {object} [props] Filter properties:
-     * @param {string} [props.id='filter-1'] Filter primary key.
-     * @param {array} [props.order=[]] Order properties.
+     * @param {object} [props]
+     * @param {string} [props.id='filter-1'] Primary key.
+     * @param {array} [props.order=[]]
      * @param {number} [props.limit=false] Maximum amount of filtered data to display.
-     * @param {array} [props.rules=[]] Filter rules.
-     * @param {object} [state] Filter states.
-     * @param {boolean} [state.paginate] If the Filter should paginate the result.
-     * @param {object} [callbacks] Callbacks:
-     * @param {object} [callbacks.limit] Limit callback:
-     * @param {function} [callbacks.limit.function] Limit callback function.
-     * @param {*} [callbacks.limit.params] Limit callback function params.
-     * @param {object} [callbacks.next] Next callback:
-     * @param {function} [callbacks.next.function] Next callback function.
-     * @param {*} [callbacks.next.params] Next callback function params.
-     * @param {object} [callbacks.order] Order callback:
-     * @param {function} [callbacks.order.function] Order callback function.
-     * @param {*} [callbacks.order.params] Order callback function params.
-     * @param {object} [callbacks.paginate] Paginate callback:
-     * @param {function} [callbacks.paginate.function] Paginate callback function.
-     * @param {*} [callbacks.paginate.params] Paginate callback function params.
-     * @param {object} [callbacks.run] Run callback:
-     * @param {function} [callbacks.run.function] Run callback function.
-     * @param {*} [callbacks.run.params] Run callback function params.
+     * @param {array} [props.rules=[]]
+     * @param {object} [state]
+     * @param {boolean} [state.paginate] If should paginate the result.
+     * @param {object} [callbacks]
+     * @param {object} [callbacks.limit]
+     * @param {function} [callbacks.limit.function]
+     * @param {*} [callbacks.limit.params]
+     * @param {object} [callbacks.next]
+     * @param {function} [callbacks.next.function]
+     * @param {*} [callbacks.next.params]
+     * @param {object} [callbacks.order]
+     * @param {function} [callbacks.order.function]
+     * @param {*} [callbacks.order.params]
+     * @param {object} [callbacks.paginate]
+     * @param {function} [callbacks.paginate.function]
+     * @param {*} [callbacks.paginate.params]
+     * @param {object} [callbacks.run]
+     * @param {function} [callbacks.run.function]
+     * @param {*} [callbacks.run.params]
      * @param {*} [data=[]] Data to filter.
      * @memberof Filter
      */
@@ -73,11 +73,12 @@ export class Filter extends Class {
     }}, data = []) {
         super({ ...Filter.props, ...props }, { ...Filter.state, ...state });
         this.setCallbacks({ ...Filter.callbacks, ...callbacks });
-        this.parseLimit();
-        this.parseOrder();
-        this.parseRules();
+        this.setLimit();
+        this.setOrder();
+        this.setRules();
         this.setData(data);
         this.setPages();
+        // console.log(this);
     }
 
     /**
@@ -132,7 +133,7 @@ export class Filter extends Class {
      * * Set the Filter Limit.
      * @memberof Filter
      */
-    parseLimit () {
+    setLimit () {
         this.setProps('limit', Limit.generate(this));
     }
 
@@ -140,7 +141,7 @@ export class Filter extends Class {
      * * Set the Filter Order.
      * @memberof Filter
      */
-    parseOrder () {
+    setOrder () {
         this.setProps('order', Order.generate(this));
     }
 
@@ -148,7 +149,7 @@ export class Filter extends Class {
      * * Set the Filter Rules.
      * @memberof Filter
      */
-    parseRules () {
+    setRules () {
         this.setProps('rules', Rule.generate(this));
     }
 
@@ -174,26 +175,18 @@ export class Filter extends Class {
      * @memberof Filter
      */
     run () {
-        this.setData(this.props.order.run(this.data));
+        console.log([...this.data]);
+        this.setData(this.data.sort(Order.sort(this)));
         this.result = [];
         if (this.data.length) {
             if (this.props.rules.length) {
-                for (const data of this.data) {
-                    let status = {
-                        data: data,
-                        valid: null,
-                    };
-                    for (const rule of this.props.rules) {
-                        if (status.valid || status.valid === null) {
-                            status = rule.check(status);
-                        }
-                    }
-                    if (status.valid || status.valid === null) {
-                        this.result.push(status.data);
-                    }
+                let data = [...this.data];
+                for (const rule of this.props.rules) {
+                    data = rule.check(data);
                 }
+                this.result = data;
             } else {
-                this.result = this.data;
+                this.result = [...this.data];
             }
         } else {
             this.result = [];
@@ -262,14 +255,11 @@ export class Filter extends Class {
             function: function (params) { /* console.log(params.filterJS.result) */ },
             params: {},
     }}
+
+    // ? Filter childs
+    static Input = Input;
+    static Limit = Limit;
+    static Order = Order;
+    static Page = Page;
+    static Rule = Rule;
 }
-
-// ? Filter childs
-Filter.Control = Control;
-Filter.Limit = Limit;
-Filter.Order = Order;
-Filter.Page = Page;
-Filter.Rule = Rule;
-
-// ? Default export
-export default Filter;

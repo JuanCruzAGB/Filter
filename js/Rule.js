@@ -1,9 +1,8 @@
 // ? JuanCruzAGB repository
 import Class from "../../JuanCruzAGB/js/Class.js"
-import Validation from "../../ValidationJS/js/Validation.js";
 
 // ? Filter repository.
-import Control from "./Control.js";
+import Input from "./Input.js";
 
 /**
  * * Rule controls the Filter rules.
@@ -12,28 +11,30 @@ import Control from "./Control.js";
  * @author Juan Cruz Armentia <juancamentia@Gmail.com>
  * @extends Class
  */
-export class Rule extends  Class {
+export default class Rule extends  Class {
     /**
      * * Creates an instance of Rule. 
-     * @param {object} [props] Rules properties:
-     * @param {string} [props.id='rule-1'] Rule primary key.
-     * @param {string} [props.target=false] Rule target.
-     * @param {string} [props.comparator='==='] Type of comparation.
-     * @param {*} [props.value=null] Rule default Value.
-     * @param {boolean} [props.strict=true] If the comparation should be strict.
+     * @param {object} [props]
+     * @param {string} [props.id="rule-1"] Primary key.
+     * @param {string} [props.target=false]
+     * @param {string} [props.comparator="=="] Type of comparation.
+     * @param {array} [props.values] Default Values.
+     * @param {object} [state]
+     * @param {boolean} [state.strict=true] If the comparation should be strict.
      * @param {Filter} filter Parent Filter.
      * @memberof Rule
      */
     constructor (props = {
-        id: 'rule-1',
+        id: "rule-1",
         target: false,
-        comparator: '==',
-        value: null,
+        comparator: "==",
+        values: [null],
+    }, state = {
         strict: true,
     }, filter) {
-        super({ ...Rule.props, ...props });
-        this.setProps('original', { ...this.props });
-        this.setControl(filter);
+        super({ ...Rule.props, ...props }, { ...Rule.state, ...state });
+        this.setProps("original", { ...this.props });
+        this.setInput(filter);
     }
 
     /**
@@ -41,83 +42,133 @@ export class Rule extends  Class {
      * @param {Filter} filter Parent Filter.
      * @memberof Rule
      */
-    setControl(filter) {
-        this.control = Control.generate(this, filter);
+    setInput(filter) {
+        this.input = Input.generate(this, filter);
     }
 
     /**
-     * * Saves & returns the Rule value.
+     * * Saves & returns the Rule values.
      * @returns {*}
      * @memberof Rule
      */
-    getValue () {
-        this.setProps('value', this.control.props.value);
-        return this.props.value;
+    getValues () {
+        this.setProps("values", this.input.props.values);
+        return this.props.values;
     }
 
     /**
      * * Check if the data validates.
-     * @param {object} [status] Filter status:
-     * @param {object} [status.data] Data filtered.
-     * @param {boolean} [status.valid=true] If the filtration is valid or not.
-     * @returns {object} The status.
+     * @param {object[]} [data]
+     * @returns {object[]}
      * @memberof Rule
      */
-    check (status = {
-        data: {},
-        valid: true,
-    }) {
-        if (this.getValue() !== null) {
-            for (const value of this.props.value) {
-                let valid = true;
-                if (((status.valid || status.valid === null) && this.props.strict) || (!this.props.strict)) {
-                    if (typeof this.props.target === 'object') {
-                        valid = false;
-                        for (const target of this.props.target) {
-                            if (/\./.exec(target)) {
-                                valid = this.checkLevels(status.data, target, value);
-                                if (valid) {
-                                    valid = valid;
-                                }
-                                continue;
-                            }
-                            if (!/\./.exec(target)) {
-                                if (status.data.hasOwnProperty(target)) {
-                                    let statusValue = status.data[target];
-                                    if (this.comparate(statusValue, value)) {
-                                        valid = true;
-                                        continue;
-                                    }
-                                }
-                            }
+    check (data = []) {
+        console.log(data);
+        console.log(this.props.target);
+        if (this.getValues() !== null) {
+            let removed = 0;
+            let aux = [...data];
+            data: for (const key in aux) {
+                if (Object.hasOwnProperty.call(aux, key)) {
+                    const object = aux[key];
+                    console.log(object);
+                    for (const value of this.props.values) {
+                        if (value === null) {
+                            continue;
                         }
-                    }
-                    if (typeof this.props.target !== 'object') {
                         if (/\./.exec(this.props.target)) {
-                            valid = this.checkLevels(status.data, this.props.target, value);
+                            console.log(this.props.target.split("."));
+                            // valid = this.checkLevels(status.data, target, value);
+                            // if (valid) {
+                            //     valid = valid;
+                            // }
+                            console.log("TODO");
+                            continue;
                         }
                         if (!/\./.exec(this.props.target)) {
-                            if (status.data.hasOwnProperty(this.props.target)) {
-                                let statusValue = status.data[this.props.target];
-                                if (!this.comparate(statusValue, value)) {
-                                    valid = false;
+                            if (/\|/.exec(this.props.target)) {
+                                if (!this.checkOptions(object, this.props.target.split("|"), value)) {
+                                    console.log("options fail");
+                                    console.log(`removed ${ data[key - removed].username }`);
+                                    data.splice((key - removed), 1);
+                                    removed++;
+                                    continue data;
                                 }
                             }
-                            if (!status.data.hasOwnProperty(this.props.target)) {
-                                valid = false;
+                            if (!/\|/.exec(this.props.target)) {
+                                if (object.hasOwnProperty(this.props.target)) {
+                                    let property = object[this.props.target];
+                                    console.log(`${ property } ${ this.props.comparator } ${ value }`);
+                                    if (!this.comparate(property, value)) {
+                                        console.log("fails");
+                                        console.log(`removed ${ data[key - removed].username }`);
+                                        data.splice((key - removed), 1);
+                                        removed++;
+                                        continue data;
+                                    }
+                                }
+                                if (!object.hasOwnProperty(this.props.target)) {
+                                    console.log("property not found");
+                                    console.log(`removed ${ data[key - removed].username }`);
+                                    data.splice((key - removed), 1);
+                                    removed++;
+                                    continue data;
+                                }
                             }
                         }
                     }
                 }
-                if (!this.props.strict) {
-                    if (status.valid) {
-                        valid = true;
-                    }
-                }
-                status.valid = valid;
             }
+            // for (const value of this.props.values) {
+            //     let valid = true;
+            //     if (((status.valid || status.valid === null) && this.state.strict) || (!this.state.strict)) {
+            //         if (typeof this.props.target === "object") {
+            //             valid = false;
+            //             for (const target of this.props.target) {
+                            // if (/\./.exec(target)) {
+                            //     valid = this.checkLevels(status.data, target, value);
+                            //     if (valid) {
+                            //         valid = valid;
+                            //     }
+                            //     continue;
+                            // }
+                            // if (!/\./.exec(target)) {
+                            //     if (status.data.hasOwnProperty(target)) {
+                            //         let statusValue = status.data[target];
+                            //         if (this.comparate(statusValue, value)) {
+                            //             valid = true;
+                            //             continue;
+                            //         }
+                            //     }
+                            // }
+            //             }
+            //         }
+            //         if (typeof this.props.target !== "object") {
+            //             if (/\./.exec(this.props.target)) {
+            //                 valid = this.checkLevels(status.data, this.props.target, value);
+            //             }
+            //             if (!/\./.exec(this.props.target)) {
+            //                 if (status.data.hasOwnProperty(this.props.target)) {
+            //                     let statusValue = status.data[this.props.target];
+            //                     if (!this.comparate(statusValue, value)) {
+            //                         valid = false;
+            //                     }
+            //                 }
+            //                 if (!status.data.hasOwnProperty(this.props.target)) {
+            //                     valid = false;
+            //                 }
+            //             }
+            //         }
+            //     }
+            //     if (!this.state.strict) {
+            //         if (status.valid) {
+            //             valid = true;
+            //         }
+            //     }
+            //     status.valid = valid;
+            // }
         }
-        return status;
+        return data;
     }
 
     /**
@@ -129,7 +180,7 @@ export class Rule extends  Class {
      * @memberof Rule
      */
     checkLevels (data, target, value) {
-        let found = true, levels = target.split('.'), statusValue = data;
+        let found = true, levels = target.split("."), statusValue = data;
         for (const name of levels) {
             if (/\:/.exec(name)) {
                 statusValue = this.parseArray(statusValue, name);
@@ -160,13 +211,13 @@ export class Rule extends  Class {
         }
         if (found) {
             found = null;
-            if (typeof statusValue === 'object') {
+            if (typeof statusValue === "object") {
                 for (const element of statusValue) {
                     let valid = true;
                     if (!this.comparate(element, value)) {
                         valid = false;
                     }
-                    if (!this.props.strict) {
+                    if (!this.state.strict) {
                         if (found) {
                             valid = true;
                         }
@@ -178,7 +229,7 @@ export class Rule extends  Class {
                 }
                 return false;
             }
-            if (typeof statusValue !== 'object') {
+            if (typeof statusValue !== "object") {
                 if (!this.comparate(statusValue, value)) {
                     return false;
                 }
@@ -191,59 +242,80 @@ export class Rule extends  Class {
     }
 
     /**
+     * * Check if the Object property based on the options matchs.
+     * @param {object} object
+     * @param {array} options
+     * @param {*} value Value to compare
+     * @returns {boolean}
+     * @memberof Rule
+     */
+    checkOptions (object, options, value) {
+        for (const option of options) {
+            if (object.hasOwnProperty(option)) {
+                if (this.comparate(object[option], value)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * * Comparates the values.
-     * @param {*} statusValue Value to comparate.
-     * @param {*} value Value to be comparated.
+     * @param {*} value1 Value to comparate.
+     * @param {*} value2 Value to be comparated.
      * @returns {boolean} If the comparation is true or false.
      * @memberof Rule
      */
-    comparate (statusValue, value) {
-        if (typeof statusValue === 'number') {
-            statusValue = statusValue + "";
+    comparate (value1, value2) {
+        if (typeof value1 === "number") {
+            value1 = value1 + "";
         }
-        if (typeof statusValue === 'string') {
-            statusValue = this.removeWeirdLetters(statusValue);
+        if (typeof value1 === "string") {
+            value1 = this.removeWeirdLetters(value1);
         }
-        if (typeof value === 'number') {
-            value = value + "";
+        if (typeof value2 === "number") {
+            value2 = value2 + "";
         }
-        if (typeof value === 'string') {
-            value = this.removeWeirdLetters(value);
+        if (typeof value2 === "string") {
+            value2 = this.removeWeirdLetters(value2);
         }
-        if (typeof value === 'object') {
-            if (new RegExp(value.regex.toUpperCase()).exec(statusValue)) {
+        if (typeof value2 === "object") {
+            console.log(`${ value1 } match ${ value2.regex.toUpperCase() }`);
+            if (new RegExp(value2.regex.toUpperCase()).exec(value1)) {
                 return true;
             }
             return false;
         }
+        console.log(`${ value1 } ${ this.props.comparator } ${ value2 }`);
         switch (this.props.comparator) {
-            case '!=':
-                if (statusValue != value) {
+            case "!=":
+                if (value1 != value2) {
                     return true;
                 }
                 return false;
-            case '!==':
-                if (statusValue !== value) {
+            case "!==":
+                if (value1 !== value2) {
                     return true;
                 }
                 return false;
-            case '==':
-                if (statusValue == value) {
+            case "==":
+                if (value1 == value2) {
                     return true;
                 }
                 return false;
-            case '===':
-                if (statusValue === value) {
+            case "===":
+                if (value1 === value2) {
                     return true;
                 }
                 return false;
-            case '>=':
-                if (parseInt(statusValue) >= parseInt(value)) {
+            case ">=":
+                if (parseInt(value1) >= parseInt(value2)) {
                     return true;
                 }
                 return false;
-            case '<=':
-                if (parseInt(statusValue) <= parseInt(value)) {
+            case "<=":
+                if (parseInt(value1) <= parseInt(value2)) {
                     return true;
                 }
                 return false;
@@ -260,8 +332,8 @@ export class Rule extends  Class {
      * @memberof Rule
      */
     parseArray (data, string) {
-        let name = string.split(':')[0];
-        let position = string.split(':')[1];
+        let name = string.split(":")[0];
+        let position = string.split(":")[1];
         let array = [];
         if (data.length) {
             for (let element of data) {
@@ -276,9 +348,9 @@ export class Rule extends  Class {
                         continue;
                     }
                     if (/\[/.exec(position)) {
-                        position = position.split('[')[1].split(']')[0];
+                        position = position.split("[")[1].split("]")[0];
                         if (/\,/.exec(position)) {
-                            position = position.split(',');
+                            position = position.split(",");
                             if (/^[0-9]/.exec(position[0])) {
                                 for (const index of position) {
                                     for (const key in element) {
@@ -336,9 +408,9 @@ export class Rule extends  Class {
                     return array;
                 }
                 if (/\[/.exec(position)) {
-                    position = position.split('[')[1].split(']')[0];
+                    position = position.split("[")[1].split("]")[0];
                     if (/\,/.exec(position)) {
-                        position = position.split(',');
+                        position = position.split(",");
                         if (/^[0-9]/.exec(position[0])) {
                             for (const index of position) {
                                 for (const key in data) {
@@ -391,19 +463,19 @@ export class Rule extends  Class {
      * @returns {string}
      * @memberof Rule
      */
-    removeWeirdLetters (string = '') {
+    removeWeirdLetters (string = "") {
         const map = {
-            'A': 'À|Á|Ã|Â|Ä',
-            'E': 'É|È|Ê|Ë',
-            'I': 'Í|Ì|Î|Ï',
-            'O': 'Ó|Ò|Ô|Õ|Ö',
-            'U': 'Ú|Ù|Û|Ü',
-            'C': 'Ç',
-            'N': 'Ñ'
+            "A": "À|Á|Ã|Â|Ä",
+            "E": "É|È|Ê|Ë",
+            "I": "Í|Ì|Î|Ï",
+            "O": "Ó|Ò|Ô|Õ|Ö",
+            "U": "Ú|Ù|Û|Ü",
+            "C": "Ç",
+            "N": "Ñ"
         };
     
         for (var pattern in map) {
-            string = string.toUpperCase().replace(new RegExp(map[pattern], 'g'), pattern);
+            string = string.toUpperCase().replace(new RegExp(map[pattern], "g"), pattern);
         }
     
         return string;
@@ -414,8 +486,8 @@ export class Rule extends  Class {
      * @memberof Rule
      */
     reset () {
-        this.setProps('value', this.props.original.value);
-        for (const btn of this.control) {
+        this.setProps("values", this.props.original.values);
+        for (const btn of this.input) {
             btn.reset(this);
         }
     }
@@ -429,10 +501,11 @@ export class Rule extends  Class {
      */
     static generate (filter) {
         let rules = [];
+        let index = 1;
         for (const key in filter.props.rules) {
             if (Object.hasOwnProperty.call(filter.props.rules, key)) {
-                const props = filter.props.rules[key];
-                rules.push(new this(this.generateProps(key, props), filter));
+                rules.push(new this(this.generateProps(index, key, filter.props.rules[key]), this.generateState(index, key, filter.props.rules[key]), filter));
+                index++;
             }
         }
         return rules;
@@ -441,54 +514,85 @@ export class Rule extends  Class {
     /**
      * * Generetes the Rule properties.
      * @static
-     * @param {number} key Rule key.
-     * @param {string|object} props Properties to parse.
+     * @param {string} key
+     * @param {string} target
+     * @param {string|object} props
      * @returns {object}
      * @memberof Rule
      */
-    static generateProps (key, props) {
-        if (typeof props === 'object') {
-            let properties = {
-                target: props[0],
-            };
-            if (props.hasOwnProperty(1)) {
-                properties.comparator = props[1];
-            }
-            if (props.hasOwnProperty(2)) {
-                properties.value = props[2];
-            }
-            if (props.hasOwnProperty(3)) {
-                properties.strict = props[3];
-            }
-            return {
-                id: `rule-${ key }`,
-                ...properties,
-            };
-        }
-        if (typeof props === 'boolean' && props) {
-            return {
-                id: `rule-${ key }`,
-                target: key,
-            };
-        }
-        return {
+    static generateProps (key, target, props) {
+        let properties = {
             id: `rule-${ key }`,
-            target: props,
+            target: target,
         };
+        if (typeof props === "object" && props !== null) {
+            if (props.length === undefined) {
+                properties = {
+                    ...properties,
+                    ...props
+                };
+            }
+            if (props.length !== undefined) {
+                if (props.hasOwnProperty(0)) {
+                    properties.comparator = props[0];
+                }
+                if (props.hasOwnProperty(1)) {
+                    properties.values = [props[1]];
+                }
+            }
+        }
+        if (typeof props !== "object" || props === null) {
+            properties.values = [props];
+        }
+        return properties;
+    }
+
+    /**
+     * * Generetes the Rule state.
+     * @static
+     * @param {string} key
+     * @param {string} target
+     * @param {string|object} props
+     * @returns {object}
+     * @memberof Rule
+     */
+    static generateState (key, target, props) {
+        let state = {
+            strict: true,
+        };
+        if (typeof props === "object" && props !== null) {
+            if (props.length === undefined) {
+                state = {
+                    ...state,
+                    ...props
+                };
+            }
+            if (props.length !== undefined) {
+                if (props.hasOwnProperty(2)) {
+                    state.strict = props[2];
+                }
+            }
+        }
+        return state;
     }
 
     /** 
      * @static
-     * @var {object} props Default props
+     * @var {object} props Default properties.
      */
     static props = {
-        id: 'rule-1',
+        id: "rule-1",
         target: false,
-        comparator: '==',
-        value: null,
+        comparator: "==",
+        values: [null],
+    }
+
+    /** 
+     * @static
+     * @var {object} state Default state.
+     */
+    static state = {
+        active: true,
         strict: true,
     }
 }
-
-// ? Default export
-export default Rule;
