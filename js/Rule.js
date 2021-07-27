@@ -20,7 +20,7 @@ export default class Rule extends  Class {
      * @param {string} [props.comparator="=="] Type of comparation.
      * @param {array} [props.values] Default Values.
      * @param {object} [state]
-     * @param {boolean} [state.strict=true] If the comparation should be strict.
+     * @param {boolean} [state.strict=false] If the comparation should be strict.
      * @param {Filter} filter Parent Filter.
      * @memberof Rule
      */
@@ -30,7 +30,7 @@ export default class Rule extends  Class {
         comparator: "==",
         values: [null],
     }, state = {
-        strict: true,
+        strict: false,
     }, filter) {
         super({ ...Rule.props, ...props }, { ...Rule.state, ...state });
         this.setProps("original", { ...this.props });
@@ -52,8 +52,13 @@ export default class Rule extends  Class {
      * @memberof Rule
      */
     getValues () {
-        this.setProps("values", this.input.props.values);
-        return this.props.values;
+        this.setProps("values", this.input.getValues());
+        for (const value of this.props.values) {
+            if (value !== null) {
+                return value;
+            }
+        }
+        return null;
     }
 
     /**
@@ -63,398 +68,503 @@ export default class Rule extends  Class {
      * @memberof Rule
      */
     check (data = []) {
-        console.log(data);
-        console.log(this.props.target);
         if (this.getValues() !== null) {
             let removed = 0;
             let aux = [...data];
-            data: for (const key in aux) {
+            for (const key in aux) {
                 if (Object.hasOwnProperty.call(aux, key)) {
                     const object = aux[key];
-                    console.log(object);
-                    for (const value of this.props.values) {
-                        if (value === null) {
+                    if (/\./.exec(this.props.target)) {
+                        let [valid, entry] = this.checkLevels(object, this.props.target.split("."));
+                        if (!valid) {
+                            data.splice((key - removed), 1);
+                            removed++;
+                        }
+                        continue;
+                    }
+                    if (!/\./.exec(this.props.target)) {
+                        if (/\:/.exec(this.props.target)) {
+                            let [valid, entry] = this.checkPositions(object, this.props.target.split(":"));
+                            if (!valid) {
+                                data.splice((key - removed), 1);
+                                removed++;
+                            }
                             continue;
                         }
-                        if (/\./.exec(this.props.target)) {
-                            console.log(this.props.target.split("."));
-                            // valid = this.checkLevels(status.data, target, value);
-                            // if (valid) {
-                            //     valid = valid;
-                            // }
-                            console.log("TODO");
-                            continue;
-                        }
-                        if (!/\./.exec(this.props.target)) {
+                        if (!/\:/.exec(this.props.target)) {
                             if (/\|/.exec(this.props.target)) {
-                                if (!this.checkOptions(object, this.props.target.split("|"), value)) {
-                                    console.log("options fail");
-                                    console.log(`removed ${ data[key - removed].username }`);
+                                let [valid, entry] = this.checkOptions(object, this.props.target.split("|"));
+                                if (!valid) {
                                     data.splice((key - removed), 1);
                                     removed++;
-                                    continue data;
                                 }
+                                continue;
                             }
                             if (!/\|/.exec(this.props.target)) {
-                                if (object.hasOwnProperty(this.props.target)) {
-                                    let property = object[this.props.target];
-                                    console.log(`${ property } ${ this.props.comparator } ${ value }`);
-                                    if (!this.comparate(property, value)) {
-                                        console.log("fails");
-                                        console.log(`removed ${ data[key - removed].username }`);
-                                        data.splice((key - removed), 1);
-                                        removed++;
-                                        continue data;
-                                    }
-                                }
-                                if (!object.hasOwnProperty(this.props.target)) {
-                                    console.log("property not found");
-                                    console.log(`removed ${ data[key - removed].username }`);
+                                let [valid, entry] = this.checkProperty(object, this.props.target);
+                                if (!valid) {
                                     data.splice((key - removed), 1);
                                     removed++;
-                                    continue data;
                                 }
+                                continue;
                             }
                         }
                     }
                 }
             }
-            // for (const value of this.props.values) {
-            //     let valid = true;
-            //     if (((status.valid || status.valid === null) && this.state.strict) || (!this.state.strict)) {
-            //         if (typeof this.props.target === "object") {
-            //             valid = false;
-            //             for (const target of this.props.target) {
-                            // if (/\./.exec(target)) {
-                            //     valid = this.checkLevels(status.data, target, value);
-                            //     if (valid) {
-                            //         valid = valid;
-                            //     }
-                            //     continue;
-                            // }
-                            // if (!/\./.exec(target)) {
-                            //     if (status.data.hasOwnProperty(target)) {
-                            //         let statusValue = status.data[target];
-                            //         if (this.comparate(statusValue, value)) {
-                            //             valid = true;
-                            //             continue;
-                            //         }
-                            //     }
-                            // }
-            //             }
-            //         }
-            //         if (typeof this.props.target !== "object") {
-            //             if (/\./.exec(this.props.target)) {
-            //                 valid = this.checkLevels(status.data, this.props.target, value);
-            //             }
-            //             if (!/\./.exec(this.props.target)) {
-            //                 if (status.data.hasOwnProperty(this.props.target)) {
-            //                     let statusValue = status.data[this.props.target];
-            //                     if (!this.comparate(statusValue, value)) {
-            //                         valid = false;
-            //                     }
-            //                 }
-            //                 if (!status.data.hasOwnProperty(this.props.target)) {
-            //                     valid = false;
-            //                 }
-            //             }
-            //         }
-            //     }
-            //     if (!this.state.strict) {
-            //         if (status.valid) {
-            //             valid = true;
-            //         }
-            //     }
-            //     status.valid = valid;
-            // }
         }
         return data;
     }
 
     /**
-     * * Check the coincidence from data levels.
-     * @param {object} data Original data.
-     * @param {string} target Target to split.
-     * @param {*} value Value to compare.
-     * @returns {boolean}
-     * @memberof Rule
+     * * Comparate the levels from an object.
+     * @param {object} object
+     * @param {array} levels
+     * @returns {array}
+     * @memberof Order
      */
-    checkLevels (data, target, value) {
-        let found = true, levels = target.split("."), statusValue = data;
-        for (const name of levels) {
-            if (/\:/.exec(name)) {
-                statusValue = this.parseArray(statusValue, name);
-                if (statusValue) {
-                    continue;
-                }
-            }
-            if (!/\:/.exec(name)) {
-                if (statusValue.length) {
-                    let array = [];
-                    for (const element of statusValue) {
-                        if (element.hasOwnProperty(name)) {
-                            array.push(element[name]);
+    checkLevels (object, levels) {
+        let valid = false, entry = object, subentry = undefined, aux = [], lastValid = false;
+        let index = 1;
+        for (const level of levels) {
+            if (entry !== undefined) {
+                if (/\:/.exec(level)) {
+                    if (typeof entry === "object" && entry.length) {
+                        aux = [], lastValid = false;
+                        for (const key in entry) {
+                            if (Object.hasOwnProperty.call(entry, key)) {
+                                [valid, subentry] = this.checkPositions(entry[key], level.split(":"));
+                                if (index == levels.length && valid) {
+                                    lastValid = true;
+                                }
+                                if (typeof subentry === "object" && subentry.length) {
+                                    for (const element of subentry) {
+                                        aux.push(element);
+                                    }
+                                    continue;
+                                }
+                                aux.push(subentry);
+                            }
                         }
-                    }
-                    statusValue = array;
-                    continue;
-                }
-                if (!statusValue.length) {
-                    if (statusValue.hasOwnProperty(name)) {
-                        statusValue = statusValue[name];
+                        entry = aux;
+                        if (index == levels.length) {
+                            valid = lastValid;
+                        }
+                        index++;
                         continue;
                     }
+                    [valid, entry] = this.checkPositions(entry, level.split(":"));
                 }
-            }
-            found = false;
-            break;
-        }
-        if (found) {
-            found = null;
-            if (typeof statusValue === "object") {
-                for (const element of statusValue) {
-                    let valid = true;
-                    if (!this.comparate(element, value)) {
-                        valid = false;
-                    }
-                    if (!this.state.strict) {
-                        if (found) {
-                            valid = true;
+                if (!/\:/.exec(level)) {
+                    if (/\|/.exec(level)) {
+                        if (typeof entry === "object" && entry.length) {
+                            aux = [], lastValid = false;
+                            for (const key in entry) {
+                                if (Object.hasOwnProperty.call(entry, key)) {
+                                    [valid, subentry] = this.checkOptions(entry[key], level.split("|"));
+                                    if (index == levels.length && valid) {
+                                        lastValid = true;
+                                    }
+                                    if (typeof subentry === "object" && subentry.length) {
+                                        for (const element of subentry) {
+                                            aux.push(element);
+                                        }
+                                        continue;
+                                    }
+                                    aux.push(subentry);
+                                }
+                            }
+                            entry = aux;
+                            if (index == levels.length) {
+                                valid = lastValid;
+                            }
+                            index++;
+                            continue;
                         }
+                        [valid, entry] = this.checkOptions(entry, level.split("|"));
                     }
-                    found = valid;
+                    if (!/\|/.exec(level)) {
+                        if (typeof entry === "object" && entry.length) {
+                            aux = [], lastValid = false;
+                            for (const key in entry) {
+                                if (Object.hasOwnProperty.call(entry, key)) {
+                                    [valid, subentry] = this.checkProperty(entry[key], level);
+                                    if (index == levels.length && valid) {
+                                        lastValid = true;
+                                    }
+                                    if (typeof subentry === "object" && subentry.length) {
+                                        for (const element of subentry) {
+                                            aux.push(element);
+                                        }
+                                        continue;
+                                    }
+                                    aux.push(subentry);
+                                }
+                            }
+                            entry = aux;
+                            if (index == levels.length) {
+                                valid = lastValid;
+                            }
+                            index++;
+                            continue;
+                        }
+                        [valid, entry] = this.checkProperty(entry, level);
+                    }
                 }
-                if (found || found === null) {
-                    return true;
-                }
-                return false;
             }
-            if (typeof statusValue !== "object") {
-                if (!this.comparate(statusValue, value)) {
-                    return false;
-                }
-            }
-            return true;
+            index++;
         }
-        if (!found) {
-            return false;
-        }
+        return [valid, entry];
     }
 
     /**
-     * * Check if the Object property based on the options matchs.
+     * * Check the options from an object.
      * @param {object} object
      * @param {array} options
-     * @param {*} value Value to compare
-     * @returns {boolean}
-     * @memberof Rule
+     * @returns {array}
+     * @memberof Order
      */
-    checkOptions (object, options, value) {
+    checkOptions (object, options) {
+        let valid = false, entry = undefined, firstEntry = undefined;
         for (const option of options) {
-            if (object.hasOwnProperty(option)) {
-                if (this.comparate(object[option], value)) {
-                    return true;
+            [valid, entry] = this.checkProperty(object, option);
+            if (valid) {
+                return [true, entry];
+            }
+            if (entry !== undefined) {
+                firstEntry = entry;
+            }
+        }
+        return [false, firstEntry];
+    }
+
+    /**
+     * * Check the positions from an object property array.
+     * @param {object} object
+     * @param {array} [property, positions]
+     * @returns {array}
+     * @memberof Order
+     */
+    checkPositions (object, [property, position]) {
+        let valid = false, entry = undefined;
+        [valid, entry] = this.checkProperty(object, property);
+        if (entry !== undefined) {
+            if (/\[/.exec(position)) {
+                let aux = [];
+                for (const key of position.split("[").pop().split("]").shift().splt(",")) {
+                    if (entry.hasOwnProperty(key)) {
+                        aux.push(entry[key]);
+                        valid = true;
+                        continue;
+                    }
+                    aux = [];
+                    valid = false;
+                    entry = undefined;
+                    break;
+                }
+                if (aux.length) {
+                    entry = aux;
                 }
             }
         }
-        return false;
+        return [valid, entry];
+    }
+
+    /**
+     * * Check if the object contains a property.
+     * @param {object} object
+     * @param {string} property
+     * @returns {array}
+     * @memberof Rule
+     */
+    checkProperty (object, property) {
+        let valid = true;
+        let element = undefined;
+        if (object.hasOwnProperty(property)) {
+            element = object[property];
+            if (this.props.comparator === "><") {
+                valid = true;
+                if (!this.comparate(element, { range: this.props.values })) {
+                    valid = false;
+                }
+            }
+            if (this.props.comparator !== "><") {
+                for (const value of this.props.values) {
+                    if (value === null) {
+                        continue;
+                    }
+                    if (!this.comparate(element, value)) {
+                        valid = false;
+                        continue;
+                    }
+                    valid = true;
+                    break;
+                }
+            }
+        }
+        if (!object.hasOwnProperty(property)) {
+            valid = false;
+        }
+        return [valid, element];
     }
 
     /**
      * * Comparates the values.
-     * @param {*} value1 Value to comparate.
-     * @param {*} value2 Value to be comparated.
+     * @param {*} aValue Value to comparate.
+     * @param {*} bValue Value to be comparated.
      * @returns {boolean} If the comparation is true or false.
      * @memberof Rule
      */
-    comparate (value1, value2) {
-        if (typeof value1 === "number") {
-            value1 = value1 + "";
+    comparate (aValue, bValue) {
+        switch (typeof bValue) {
+            case "boolean":
+                return this.comparateBoolean(aValue, bValue);
+            case "number":
+                return this.comparateNumber(aValue, bValue);
+            case "object":
+                return this.comparateObject(aValue, bValue);
+            case "string":
+                if (!isNaN(parseFloat(bValue))) {
+                    bValue = parseFloat(bValue);
+                    return this.comparateNumber(aValue, bValue);
+                }
+                return this.comparateString(aValue, bValue);
+            default:
+                console.error(`Typeof "${ typeof bValue }": comparation not created`);
+                break;
         }
-        if (typeof value1 === "string") {
-            value1 = this.removeWeirdLetters(value1);
-        }
-        if (typeof value2 === "number") {
-            value2 = value2 + "";
-        }
-        if (typeof value2 === "string") {
-            value2 = this.removeWeirdLetters(value2);
-        }
-        if (typeof value2 === "object") {
-            console.log(`${ value1 } match ${ value2.regex.toUpperCase() }`);
-            if (new RegExp(value2.regex.toUpperCase()).exec(value1)) {
-                return true;
-            }
+    }
+
+    /**
+     * * Comparates two booleans.
+     * @param {number} aValue
+     * @param {number} bValue
+     * @returns {boolean}
+     * @memberof Rule
+     */
+    comparateBoolean (aValue, bValue) {
+        if (typeof aValue !== "boolean") {
             return false;
         }
-        console.log(`${ value1 } ${ this.props.comparator } ${ value2 }`);
         switch (this.props.comparator) {
             case "!=":
-                if (value1 != value2) {
-                    return true;
-                }
-                return false;
-            case "!==":
-                if (value1 !== value2) {
+                if (aValue != bValue) {
                     return true;
                 }
                 return false;
             case "==":
-                if (value1 == value2) {
+                if (aValue == bValue) {
                     return true;
                 }
                 return false;
-            case "===":
-                if (value1 === value2) {
+            case ">":
+                if (aValue && !bValue) {
                     return true;
                 }
                 return false;
-            case ">=":
-                if (parseInt(value1) >= parseInt(value2)) {
-                    return true;
-                }
-                return false;
-            case "<=":
-                if (parseInt(value1) <= parseInt(value2)) {
+            case "<":
+                if (!aValue && bValue) {
                     return true;
                 }
                 return false;
             default:
+                console.error(`Comparator "${ this.props.comparator }": not created`);
                 return false;
         }
     }
 
     /**
-     * * Parse & finds an array data.
-     * @param {object} data Data to for.
-     * @param {string} string Data to search.
-     * @returns {*}
+     * * Comparates two numbers.
+     * @param {number} aValue
+     * @param {number} bValue
+     * @returns {boolean}
      * @memberof Rule
      */
-    parseArray (data, string) {
-        let name = string.split(":")[0];
-        let position = string.split(":")[1];
-        let array = [];
-        if (data.length) {
-            for (let element of data) {
-                if (element.hasOwnProperty(name)) {
-                    element = element[name];
-                    if (/\*/.exec(position)) {
-                        for (const key in element) {
-                            if (Object.hasOwnProperty.call(element, key)) {
-                                array.push(element[key]);
-                            }
-                        }
-                        continue;
-                    }
-                    if (/\[/.exec(position)) {
-                        position = position.split("[")[1].split("]")[0];
-                        if (/\,/.exec(position)) {
-                            position = position.split(",");
-                            if (/^[0-9]/.exec(position[0])) {
-                                for (const index of position) {
-                                    for (const key in element) {
-                                        if (Object.hasOwnProperty.call(element, key)) {
-                                            if (parseInt(key) === parseInt(index)) {
-                                                array.push(element[key]);
-                                            }
-                                        }
-                                    }
-                                }
-                                continue;
-                            }
-                            for (const index of position) {
-                                for (const key of element) {
-                                    if (key === index) {
-                                        array.push(element[key]);
-                                    }
-                                }
-                            }
-                        }
-                        continue;
-                    }
-                    if (/^[0-9]/.exec(position)) {
-                        position = parseInt(position);
-                        for (const key in element) {
-                            if (Object.hasOwnProperty.call(element, key) && parseInt(key) === position) {
-                                array = element[key];
-                            }
-                        }
-                        continue;
-                    } else {
-                        for (const key in element) {
-                            if (Object.hasOwnProperty.call(element, key)) {
-                                const object = element[key];
-                                if (key === position) {
-                                    array = object;
-                                }
-                            }
-                        }
-                        continue;
-                    }
-                }
+    comparateNumber (aValue, bValue) {
+        if (typeof aValue !== "number") {
+            if (isNaN(parseFloat(aValue))) {
+                return false;
             }
-            return array;
+            aValue = parseFloat(aValue);
         }
-        if (!data.length) {
-            if (data.hasOwnProperty(name)) {
-                data = data[name];
-                if (/\*/.exec(position)) {
-                    for (const key in data) {
-                        if (Object.hasOwnProperty.call(data, key)) {
-                            array.push(data[key]);
-                        }
-                    }
-                    return array;
+        switch (this.props.comparator) {
+            case "!=":
+                if (aValue != bValue) {
+                    return true;
                 }
-                if (/\[/.exec(position)) {
-                    position = position.split("[")[1].split("]")[0];
-                    if (/\,/.exec(position)) {
-                        position = position.split(",");
-                        if (/^[0-9]/.exec(position[0])) {
-                            for (const index of position) {
-                                for (const key in data) {
-                                    if (Object.hasOwnProperty.call(data, key)) {
-                                        if (parseInt(key) === parseInt(index)) {
-                                            array.push(data[key]);
-                                        }
-                                    }
-                                }
-                            }
-                            return array;
-                        }
-                        for (const index of position) {
-                            for (const key of data) {
-                                if (key === index) {
-                                    array.push(data[key]);
-                                }
-                            }
-                        }
-                    }
-                    return array;
+                return false;
+            case "==":
+                if (aValue == bValue) {
+                    return true;
                 }
-                if (/^[0-9]/.exec(position)) {
-                    position = parseInt(position);
-                    for (const key in data) {
-                        if (Object.hasOwnProperty.call(data, key) && parseInt(key) === position) {
-                            array = data[key];
-                        }
-                    }
-                    return array;
-                } else {
-                    for (const key in data) {
-                        if (Object.hasOwnProperty.call(data, key)) {
-                            const element = data[key];
-                            if (key === position) {
-                                array = element;
-                            }
-                        }
-                    }
-                    return array;
+                return false;
+            case ">":
+                if (aValue > bValue) {
+                    return true;
                 }
+                return false;
+            case ">=":
+                if (aValue >= bValue) {
+                    return true;
+                }
+                return false;
+            case "<":
+                if (aValue < bValue) {
+                    return true;
+                }
+                return false;
+            case "<=":
+                if (aValue <= bValue) {
+                    return true;
+                }
+                return false;
+            case "><":
+                let min = null, max = 0;
+                for (const value of bValue) {
+                    if (min === null || min > value) {
+                        min = value;
+                    }
+                    if (max < value) {
+                        max = value;
+                    }
+                }
+                if (aValue >= min && aValue <= max) {
+                    return true;
+                }
+                return false;
+                break;
+            default:
+                console.error(`Comparator "${ this.props.comparator }": not created`);
+                return false;
+        }
+    }
+
+    /**
+     * * Comparate two objects.
+     * @param {object} aValue
+     * @param {object} bValue
+     * @returns {boolean}
+     * @memberof Rule
+     */
+    comparateObject (aValue, bValue) {
+        if (bValue === null) {
+            if (aValue !== null) {
+                return false;
+            }
+            switch (this.props.comparator) {
+                case "!=":
+                    if (aValue != bValue) {
+                        return true;
+                    }
+                    return false;
+                case "==":
+                    if (aValue == bValue) {
+                        return true;
+                    }
+                    return false;
+                default:
+                    console.error(`Comparator "${ this.props.comparator }": not created`);
+                    return false;
             }
         }
-        return false;
+        if (bValue.hasOwnProperty("length")) {
+            if (typeof aValue !== "object" || !aValue.length) {
+                return false;
+            }
+            return this.comparateNumber(aValue.length, bValue.length, this.props.comparator);
+        }
+        if (bValue.hasOwnProperty("range")) {
+            if (typeof aValue !== "number") {
+                if (isNaN(parseFloat(aValue))) {
+                    return false;
+                }
+            }
+            return this.comparateNumber(aValue, bValue.range, this.props.comparator);
+        }
+        if (bValue.hasOwnProperty("regex")) {
+            if (typeof aValue !== "string") {
+                return false;
+            }
+            return this.comparateRegExp(aValue, bValue.regex, this.props.comparator);
+        }
+    }
+
+    /**
+     * * Comparates one value by the regex.
+     * @param {number} aValue
+     * @param {number} bValue
+     * @returns {boolean}
+     * @memberof Rule
+     */
+    comparateRegExp (aValue, bValue) {
+        if (typeof aValue !== "string") {
+            return false;
+        }
+        switch (this.props.comparator) {
+            case "!=":
+                if (!new RegExp(bValue.toUpperCase()).exec(aValue.toUpperCase())) {
+                    return true;
+                }
+                return false;
+            case "==":
+                if (new RegExp(bValue.toUpperCase()).exec(aValue.toUpperCase())) {
+                    return true;
+                }
+                return false;
+            default:
+                console.error(`Comparator "${ this.props.comparator }": not created`);
+                return false;
+        }
+    }
+
+    /**
+     * * Comparates two strings.
+     * @param {string} aValue
+     * @param {string} bValue
+     * @returns {boolean}
+     * @memberof Rule
+     */
+    comparateString (aValue, bValue) {
+        if (typeof aValue !== "string") {
+            return false;
+        }
+        aValue = this.removeWeirdLetters(aValue);
+        bValue = this.removeWeirdLetters(bValue);
+        switch (this.props.comparator) {
+            case "!=":
+                if (aValue != bValue) {
+                    return true;
+                }
+                return false;
+            case "==":
+                if (aValue == bValue) {
+                    return true;
+                }
+                return false;
+            case ">":
+                if (aValue > bValue) {
+                    return true;
+                }
+                return false;
+            case ">=":
+                if (aValue >= bValue) {
+                    return true;
+                }
+                return false;
+            case "<":
+                if (aValue < bValue) {
+                    return true;
+                }
+                return false;
+            case "<=":
+                if (aValue <= bValue) {
+                    return true;
+                }
+                return false;
+            default:
+                console.error(`Comparator "${ this.props.comparator }": not created`);
+                return false;
+        }
     }
 
     /**
@@ -475,7 +585,7 @@ export default class Rule extends  Class {
         };
     
         for (var pattern in map) {
-            string = string.toUpperCase().replace(new RegExp(map[pattern], "g"), pattern);
+            string = `${ string }`.toUpperCase().replace(new RegExp(map[pattern], "g"), pattern);
         }
     
         return string;
@@ -558,7 +668,7 @@ export default class Rule extends  Class {
      */
     static generateState (key, target, props) {
         let state = {
-            strict: true,
+            strict: false,
         };
         if (typeof props === "object" && props !== null) {
             if (props.length === undefined) {
@@ -593,6 +703,6 @@ export default class Rule extends  Class {
      */
     static state = {
         active: true,
-        strict: true,
+        strict: false,
     }
 }

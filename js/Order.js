@@ -133,31 +133,38 @@ export default class Order extends Class {
     }
 
     /**
-     * * Comparate the positions from objects.
+     * * Comparate the levels from objects.
      * @static
-     * @param {array} [[a,b]]
-     * @param {array} [positions]
+     * @param {array} [a,b]
+     * @param {array} levels
      * @param {string} [type="ASC"]
-     * @returns {0|1|-1}
+     * @returns {array}
      * @memberof Order
      */
-    static checkLevels ([a, b] = [], levels = [], type = "ASC") {
-        let index = 0, aValue = a, bValue = b;
-        // ? prices:*.price
-        console.group(a);
+    static checkLevels ([a, b], levels, type = "ASC") {
+        let index = 0, aValue = a, bValue = b, aNew, bNew, aux = [];
+        let position = 1;
         for (const level of levels) {
-            console.log(level);
             if (index === 0) {
-                console.log("check");
                 if (/\:/.exec(level)) {
                     if (typeof aValue === "object" && aValue.length) {
-                        for (const index in aValue) {
+                        aux = [];
+                        for (const key in aValue) {
                             if (index === 0) {
-                                if (Object.hasOwnProperty.call(aValue, index)) {
-                                    [index, aValue, bValue] = this.checkPositions([aValue[index], bValue[index]], level.split(":"), type);
+                                if (Object.hasOwnProperty.call(aValue, key)) {
+                                    [index, aNew, bNew] = this.checkPositions([aValue[key], bValue[key]], level.split(":"), type);
+                                    if (typeof aNew === "object" && aNew.length) {
+                                        for (const element of aNew) {
+                                            aux.push(element);
+                                        }
+                                        continue;
+                                    }
+                                    aux.push(aNew);
                                 }
                             }
                         }
+                        aValue = aux;
+                        position++;
                         continue;
                     }
                     [index, aValue, bValue] = this.checkPositions([aValue, bValue], level.split(":"), type);
@@ -165,37 +172,54 @@ export default class Order extends Class {
                 if (!/\:/.exec(level)) {
                     if (/\|/.exec(level)) {
                         if (typeof aValue === "object" && aValue.length) {
+                            aux = [];
                             for (const key in aValue) {
                                 if (index === 0) {
                                     if (Object.hasOwnProperty.call(aValue, key)) {
                                         [index, aValue, bValue] = this.checkOptions([aValue[key], bValue[key]], level.split("|"), type);
+                                        if (typeof aNew === "object" && aNew.length) {
+                                            for (const element of aNew) {
+                                                aux.push(element);
+                                            }
+                                            continue;
+                                        }
+                                        aux.push(aNew);
                                     }
                                 }
                             }
+                            aValue = aux;
+                            position++;
                             continue;
                         }
                         [index, aValue, bValue] = this.checkOptions([aValue, bValue], level.split("|"), type);
                     }
                     if (!/\|/.exec(level)) {
-                        console.log(aValue);
-                        console.log(bValue);
                         if (typeof aValue === "object" && aValue.length) {
+                            aux = [];
                             for (const key in aValue) {
                                 if (index === 0) {
                                     if (Object.hasOwnProperty.call(aValue, key)) {
                                         [index, aValue, bValue] = this.checkProperty([aValue[key], bValue[key]], level, type);
+                                        if (typeof aNew === "object" && aNew.length) {
+                                            for (const element of aNew) {
+                                                aux.push(element);
+                                            }
+                                            continue;
+                                        }
+                                        aux.push(aNew);
                                     }
                                 }
                             }
+                            aValue = aux;
+                            position++;
                             continue;
                         }
                         [index, aValue, bValue] = this.checkProperty([aValue, bValue], level, type);
                     }
                 }
+                position++;
             }
         }
-        console.log(index);
-        console.groupEnd(a);
         return [index, aValue, bValue];
     }
 
@@ -280,47 +304,49 @@ export default class Order extends Class {
     /**
      * * Comparate the options from objects.
      * @static
-     * @param {array} [[a,b]]
-     * @param {array} [options]
+     * @param {array} [a,b]
+     * @param {array} options
      * @param {string} [type="ASC"]
      * @returns {array}
      * @memberof Order
      */
-    static checkOptions ([a, b] = [], options = [], type = "ASC") {
-        let index, aValue = a, firstAValue = null, bValue = b, firstBValue = null;
+    static checkOptions ([a, b], options, type = "ASC") {
+        let index = 0, aValue = false, firstAValue = null, bValue = false, firstBValue = null;
         for (const option of options) {
-            [index, aValue, bValue] = this.checkProperty([aValue, bValue], option, type);
-            if (index === 0 && firstAValue === null) {
-                firstAValue = aValue;
-                firstBValue = bValue;
-            }
+            [index, aValue, bValue] = this.checkProperty([a, b], option, type);
             if (index !== 0) {
                 return [index, aValue, bValue];
             }
+            if (aValue) {
+                firstAValue = aValue;
+            }
+            if (bValue) {
+                firstBValue = bValue;
+            }
         }
-        if (index === 0) {
-            return [index, firstAValue, firstBValue];
-        }
-        return [index, aValue, bValue];
+        return [0, firstAValue, firstBValue];
     }
 
     /**
      * * Comparate the positions from objects.
      * @static
-     * @param {array} [[a,b]]
-     * @param {array} [positions]
+     * @param {array} [a,b]
+     * @param {array} [property, positions]
      * @param {string} [type="ASC"]
      * @returns {array}
      * @memberof Order
      */
-    static checkPositions ([a, b] = [], [property, position] = [], type = "ASC") {
+    static checkPositions ([a, b], [property, position], type = "ASC") {
         let index = 0, aValue = false, bValue = false;
         [index, aValue, bValue] = this.checkProperty([a, b], property, type);
         if (aValue) {
             if (/\[/.exec(position)) {
-                for (const index of position.split("[").pop().split("]").shift().splt(",")) {
-                    if (aValue.hasOwnProperty(index)) {
-                        if (bValue.hasOwnProperty(index)) {
+                let aAux = [], bAux = [];
+                for (const key of position.split("[").pop().split("]").shift().splt(",")) {
+                    if (aValue.hasOwnProperty(key)) {
+                        aAux.push(aValue[key]);
+                        if (bValue.hasOwnProperty(key)) {
+                            bAux.push(bValue[key]);
                             continue;
                         }
                         switch (type.toUpperCase()) {
@@ -331,12 +357,21 @@ export default class Order extends Class {
                                 index = 1;
                                 break;
                         }
+                        bAux = [];
                         bValue = false;
                         break;
                     }
+                    aAux = [];
+                    bAux = [];
                     aValue = false;
                     bValue = false;
                     break;
+                }
+                if (aAux.length) {
+                    aValue = aAux;
+                }
+                if (bAux.length) {
+                    aValue = aAux;
                 }
             }
         }
@@ -346,13 +381,13 @@ export default class Order extends Class {
     /**
      * * Comparate the properties from objects.
      * @static
-     * @param {array} [[a,b]]
+     * @param {array} [a,b]
      * @param {*} property
      * @param {string} [type="ASC"]
      * @returns {array}
      * @memberof Order
      */
-    static checkProperty ([a, b] = [], property, type = "ASC") {
+    static checkProperty ([a, b], property, type = "ASC") {
         if (a.hasOwnProperty(property)) {
             let aValue = a[property];
             if (b.hasOwnProperty(property)) {
@@ -505,7 +540,6 @@ export default class Order extends Class {
                             }
                             if (!/\:/.exec(order.props.by)) {
                                 if (/\|/.exec(order.props.by)) {
-                                    console.log("TODO");
                                     [index, ...other] = Order.checkOptions([a, b], order.props.by.split("|"), order.props.value);
                                     continue;
                                 }

@@ -159,6 +159,48 @@ export default class Input extends Class {
         return this.state.active;
     }
 
+    getValues () {
+        this.setProps("values", []);
+        for (const html of this.htmls) {
+            switch (html.nodeName) {
+                case 'INPUT':
+                    switch (html.type.toUpperCase()) {
+                        case 'RADIO':
+                        case 'CHECKBOX':
+                            if (html.checked) {
+                                this.props.values.push(html.value);
+                            }
+                            break;
+                        case 'RANGE':
+                        case 'NUMBER':
+                            if (html.value) {
+                                this.props.values.push(parseFloat(html.value));
+                            }
+                            break;
+                        case 'TEXT':
+                            if (html.value) {
+                                this.props.values.push(html.value);
+                            }
+                            break;
+                        case 'SEARCH':
+                            if (html.value) {
+                                this.props.values.push({ regex:html.value });
+                            }
+                            break;
+                        default:
+                            console.error(`TODO: INPUT TYPE: ${ html.type.toUpperCase() }`);
+                            console.error(`Input type: ${ html.type } does not have event`);
+                            break;
+                    }
+                    break;
+                default:
+                    console.error(`HTML Element: ${ html.type } does not have event`);
+                    break;
+            }
+        }
+        return this.props.values;
+    }
+
     /**
      * * Reset the Input.
      * @memberof Input
