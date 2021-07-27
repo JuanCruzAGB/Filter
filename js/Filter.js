@@ -175,9 +175,7 @@ export default class Filter extends Class {
      * @memberof Filter
      */
     run () {
-        console.log([...this.data]);
         this.setData(this.data.sort(Order.sort(this)));
-        console.log([...this.data]);
         this.result = [];
         if (this.data.length) {
             if (this.props.rules.length) {
