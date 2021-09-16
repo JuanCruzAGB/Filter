@@ -237,7 +237,11 @@ export default class Input extends Class {
             if (/\[/.exec(name)) {
                 name = name.split('[').pop();
             }
-            if (name === target.split(".").shift().split(":").shift()) {
+            let levels = "";
+            for (const level of target.split(".")) {
+                levels = `${ (levels == "" ? "" : `${ levels }.`) }${ level.split(":").shift() }`;
+            }
+            if (name === levels) {
                 if (html.classList.contains(type)) {
                     htmls.push(html);
                 }
