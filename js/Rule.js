@@ -251,7 +251,7 @@ export default class Rule extends  Class {
         if (entry !== undefined) {
             if (/\[/.exec(position)) {
                 let aux = [];
-                for (const key of position.split("[").pop().split("]").shift().splt(",")) {
+                for (const key of position.split("[").pop().split("]").shift().split(",")) {
                     if (entry.hasOwnProperty(key)) {
                         aux.push(entry[key]);
                         valid = true;
