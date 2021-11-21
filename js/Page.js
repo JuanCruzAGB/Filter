@@ -1,28 +1,40 @@
 // ? JuanCruzAGB repository
 import Class from "../../JuanCruzAGB/js/Class.js";
 
+/**
+ * * Page controls the filter pagination.
+ * @export
+ * @class Page
+ * @author Juan Cruz Armentia <juan.cruz.armentia@gmail.com>
+ * @extends Class
+ */
 export default class Page extends Class {
     /**
      * * Creates an instance of Page.
-     * @param {object} [props] Page properties:
-     * @param {number} [props.current=1] Current page.
-     * @param {number} [props.length=1] Pages length.
-     * @param {number} [props.limit=1] Limites data.
-     * @param {object} [callback] Page callback:
-     * @param {function} [callback.function] Page callback function.
-     * @param {*} [callback.params] Page callback function params.
+     * @param {object} [data.data]
+     * @param {object} [data.props]
+     * @param {number} [data.props.current=1] Current page.
+     * @param {number} [data.props.length=1] Pages length.
+     * @param {number} [data.props.limit=1] Limites data.
+     * @param {object} [data.s]
+     * @param {function} [data.callbacks.function]
+     * @param {*} [data.callbacks.params]
      * @memberof Page
      */
-    constructor (props = {
-        current: 1,
-        length: 1,
-        limit: 1,
-    }, callback = {
-        function: function (params) { /* console.log(params.result) */ },
-        params: {},
+    constructor (data = {
+        props: {
+            current: 1,
+            length: 1,
+            limit: false,
+        }, callbacks: {
+            default: {
+                function: function (params) { /* console.log(params.result) */ },
+                params: {},
+            },
+        },
     }) {
-        super({  ...Page.props, ...props });
-        this.setCallbacks({ default: { ...Page.callback, ...callback } });
+        super({  ...Page.props, ...((data && data.hasOwnProperty('props')) ? data.props : {}) });
+        this.setCallbacks({ ...Page.callbacks, ...((data && data.hasOwnProperty('callbacks')) ? data.callbacks : {}) });
     }
 
     /**
@@ -87,16 +99,22 @@ export default class Page extends Class {
     /**
      * * Generate all the Order.
      * @static
-     * @param {Filter} filter Parent Filter.
+     * @param {Filter} Filter Parent Filter.
      * @returns {Order[]}
      * @memberof Rule
      */
-    static generate (filter) {
+    static generate (Filter) {
         return new this({
-            current: 1,
-            length: 1,
-            limit: filter.props.limit.props.length,
-        }, { ...filter.callbacks.paginate });
+            props: {
+                current: 1,
+                length: 1,
+                limit: (Filter.props.limit && Filter.props.limit.hasOwnProperty('props') && Filter.props.limit.props.hasOwnProperty('limit')) ? Filter.props.limit.props.limit : false,
+            }, callbacks: {
+                default: {
+                    ...Filter.callbacks.paginate,
+                },
+            },
+        });
     }
 
     /** 
@@ -106,15 +124,17 @@ export default class Page extends Class {
     static props = {
         current: 1,
         length: 1,
-        limit: 1,
+        limit: false,
     }
 
     /** 
      * @static
-     * @var {object} callback Default callback
+     * @var {object} callbacks Default callback
      */
-    static callback = {
-        function: function (params) { /* console.log(params.result) */ },
-        params: {},
+    static callbacks = {
+        default: {
+            function: function (params) { /* console.log(params.result) */ },
+            params: {},
+        },
     }
 }

@@ -8,7 +8,7 @@ import Input from "././Input.js";
  * * Order controls the Filter Order.
  * @export
  * @class Order
- * @author Juan Cruz Armentia <juancarmentia@gmail.com>
+ * @author Juan Cruz Armentia <juan.cruz.armentia@gmail.com>
  * @extends Class
  */
 export default class Order extends Class {

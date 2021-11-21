@@ -605,56 +605,32 @@ export default class Rule extends  Class {
     /**
      * * Generate all the Rules.
      * @static
-     * @param {Filter} filter Parent Filter.
+     * @param {Filter} Filter Parent Filter.
      * @returns {Rules[]}
      * @memberof Rule
      */
-    static generate (filter) {
+    static generate (Filter) {
         let rules = [];
         let index = 1;
-        for (const key in filter.props.rules) {
-            if (Object.hasOwnProperty.call(filter.props.rules, key)) {
-                rules.push(new this(this.generateProps(index, key, filter.props.rules[key]), this.generateState(index, key, filter.props.rules[key]), filter));
+        for (const key in Filter.props.rules) {
+            if (Object.hasOwnProperty.call(Filter.props.rules, key)) {
+                rules.push(new this({
+                    // state: this.generateState(index, key, Filter.props.rules[key]),
+                    props: {
+                        id: `rule-${ index }`,
+                        traget: key,
+                        ...Filter.props.rules[key] instanceof Object ? (Array.isArray(Filter.props.rules[key]) ? {
+                            comparator: Filter.props.rules[key][0],
+                            values: [ Filter.props.rules[key][1] ],
+                        } : Filter.props.rules[key]) : { values: [ Filter.props.rules[key] ] },
+                    }, state: {
+                        // todo
+                    }, Filter: Filter,
+                }));
                 index++;
             }
         }
         return rules;
-    }
-
-    /**
-     * * Generetes the Rule properties.
-     * @static
-     * @param {string} key
-     * @param {string} target
-     * @param {string|object} props
-     * @returns {object}
-     * @memberof Rule
-     */
-    static generateProps (key, target, props) {
-        let properties = {
-            id: `rule-${ key }`,
-            target: target,
-        };
-        if (typeof props === "object" && props !== null) {
-            if (props.length === undefined) {
-                properties = {
-                    ...properties,
-                    ...props
-                };
-            }
-            if (props.length !== undefined) {
-                if (props.hasOwnProperty(0)) {
-                    properties.comparator = props[0];
-                }
-                if (props.hasOwnProperty(1)) {
-                    properties.values = [props[1]];
-                }
-            }
-        }
-        if (typeof props !== "object" || props === null) {
-            properties.values = [props];
-        }
-        return properties;
     }
 
     /**

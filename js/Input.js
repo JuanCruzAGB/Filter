@@ -5,7 +5,7 @@ import Class from "../../JuanCruzAGB/js/Class.js"
  * * Input controls the Filter buttons.
  * @export
  * @class Input
- * @author Juan Cruz Armentia <juancarmentia@gmail.com>
+ * @author Juan Cruz Armentia <juan.cruz.armentia@gmail.com>
  * @extends Class
  */
 export default class Input extends Class {

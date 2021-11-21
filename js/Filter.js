@@ -12,71 +12,75 @@ import Rule from "./Rule.js";
  * * Filter makes an excellent filter.
  * @export
  * @class Filter
- * @author Juan Cruz Armentia <juancarmentia@gmail.com>
+ * @author Juan Cruz Armentia <juan.cruz.armentia@gmail.com>
  * @extends Class
  */
 export default class Filter extends Class {
     /**
      * * Creates an instance of Filter.
-     * @param {object} [props]
-     * @param {string} [props.id='filter-1'] Primary key.
-     * @param {array} [props.order=[]]
-     * @param {number} [props.limit=false] Maximum amount of filtered data to display.
-     * @param {array} [props.rules=[]]
-     * @param {object} [state]
-     * @param {boolean} [state.paginate] If should paginate the result.
-     * @param {object} [callbacks]
-     * @param {object} [callbacks.limit]
-     * @param {function} [callbacks.limit.function]
-     * @param {*} [callbacks.limit.params]
-     * @param {object} [callbacks.next]
-     * @param {function} [callbacks.next.function]
-     * @param {*} [callbacks.next.params]
-     * @param {object} [callbacks.order]
-     * @param {function} [callbacks.order.function]
-     * @param {*} [callbacks.order.params]
-     * @param {object} [callbacks.paginate]
-     * @param {function} [callbacks.paginate.function]
-     * @param {*} [callbacks.paginate.params]
-     * @param {object} [callbacks.run]
-     * @param {function} [callbacks.run.function]
-     * @param {*} [callbacks.run.params]
-     * @param {*} [data=[]] Data to filter.
+     * @param {object} [data]
+     * @param {object} [data.props]
+     * @param {string} [data.props.id='filter-1'] Primary key.
+     * @param {array} [data.props.order=[]]
+     * @param {number} [data.props.limit=false] Maximum amount of filtered data to display.
+     * @param {array} [data.props.rules=[]]
+     * @param {object} [data.state]
+     * @param {boolean} [data.state.paginate] If should paginate the result.
+     * @param {object} [data.callbacks]
+     * @param {object} [data.callbacks.limit]
+     * @param {function} [data.callbacks.limit.function]
+     * @param {*} [data.callbacks.limit.params]
+     * @param {object} [data.callbacks.next]
+     * @param {function} [data.callbacks.next.function]
+     * @param {*} [data.callbacks.next.params]
+     * @param {object} [data.callbacks.order]
+     * @param {function} [data.callbacks.order.function]
+     * @param {*} [data.callbacks.order.params]
+     * @param {object} [data.callbacks.paginate]
+     * @param {function} [data.callbacks.paginate.function]
+     * @param {*} [data.callbacks.paginate.params]
+     * @param {object} [data.callbacks.run]
+     * @param {function} [data.callbacks.run.function]
+     * @param {*} [data.callbacks.run.params]
+     * @param {*} [data.data=[]] Data to filter.
      * @memberof Filter
      */
-    constructor (props = {
-        id: 'filter-1',
-        limit: false,
-        order: [],
-        rules: [],
-    }, state = {
-        paginate: false,
-    }, callbacks = {
-        limit: {
-            function: function (params) { /* console.log(params.result) */ },
-            params: {},
-    }, next: {
-            function: function (params) { /* console.log(params.result) */ },
-            params: {},
-    }, order: {
-            function: function (params) { /* console.log(params.result) */ },
-            params: {},
-    }, paginate: {
-            function: function (params) { /* console.log(params.result) */ },
-            params: {},
-    }, reset: {
-            function: function (params) { /* console.log(params.filterJS.result) */ },
-            params: {},
-    }, run: {
-            function: function (params) { /* console.log(params.filterJS.result) */ },
-            params: {},
-    }}, data = []) {
-        super({ ...Filter.props, ...props }, { ...Filter.state, ...state });
-        this.setCallbacks({ ...Filter.callbacks, ...callbacks });
+    constructor (data = {
+        props: {
+            id: 'filter-1',
+            limit: false,
+            order: [],
+            rules: [],
+        }, state: {
+            paginate: false,
+        }, callbacks: {
+            limit: {
+                function: function (params) { /* console.log(params.result) */ },
+                params: {},
+            }, next: {
+                function: function (params) { /* console.log(params.result) */ },
+                params: {},
+            }, order: {
+                function: function (params) { /* console.log(params.result) */ },
+                params: {},
+            }, paginate: {
+                function: function (params) { /* console.log(params.result) */ },
+                params: {},
+            }, reset: {
+                function: function (params) { /* console.log(params.filterJS.result) */ },
+                params: {},
+            }, run: {
+                function: function (params) { /* console.log(params.filterJS.result) */ },
+                params: {},
+            },
+        }, data: [],
+    }) {
+        super({ ...Filter.props, ...((data && data.hasOwnProperty('props')) ? data.props : {}) }, { ...Filter.state, ...((data && data.hasOwnProperty('state')) ? data.state : {}) });
+        this.setCallbacks({ ...Filter.callbacks, ...((data && data.hasOwnProperty('callbacks')) ? data.callbacks : {}) });
         this.setLimit();
         this.setOrder();
         this.setRules();
-        this.setData(data);
+        this.setData([ ...((data && data.hasOwnProperty('data')) ? data.data : []) ]);
         this.setPages();
         // console.log(this);
     }
@@ -98,35 +102,6 @@ export default class Filter extends Class {
      */
     setPages () {
         this.setProps('page', Page.generate(this));
-    }
-
-    /**
-     * * Change the Filter data.
-     * @param {*} [data=[]] Data to filter.
-     * @memberof Filter
-     */
-    changeData (data) {
-        this.setData(data);
-    }
-
-    /**
-     * * Load the following amount of data.
-     * @returns {array} Next result row data.
-     * @memberof Filter
-     */
-    next () {
-        let response = {
-            current: this.result,
-        }
-        if (this.state.paginate) {
-            response.result = this.result;
-            response.current = this.props.page.next(this.result);
-        }
-        this.execute('next', {
-            filterJS: this,
-            ...response,
-        });
-        return response;
     }
 
     /**
@@ -154,27 +129,54 @@ export default class Filter extends Class {
     }
 
     /**
+     * * Load the following amount of data.
+     * @param {object} [params]
+     * @returns {array} Next result row data.
+     * @memberof Filter
+     */
+    next (params = {}) {
+        let response = {
+            current: this.result,
+        }
+        if (this.state.paginate) {
+            response.result = this.result;
+            response.current = this.props.page.next(this.result);
+        }
+        this.execute('next', {
+            ...params,
+            ...this.callbacks.next.params,
+            Filter: this,
+            ...response,
+        });
+        return response;
+    }
+
+    /**
      * * Reset the Filter.
+     * @param {object} [params]
      * @returns {array} A reset result data.
      * @memberof Filter
      */
-    reset () {
+    reset (params = {}) {
         for (const rule of this.props.rules) {
             rule.reset();
         }
         result = this.run();
         this.execute('reset', {
-            filterJS: this,
+            ...params,
+            ...this.callbacks.reset.params,
+            Filter: this,
         });
         return result;
     }
 
     /**
      * * Run the filter function.
+     * @param {object} [params]
      * @returns {array} Data filtered.
      * @memberof Filter
      */
-    run () {
+    run (params = {}) {
         this.setData(this.data.sort(Order.sort(this)));
         this.result = [];
         if (this.data.length) {
@@ -205,7 +207,9 @@ export default class Filter extends Class {
             };
         }
         this.execute('run', {
-            filterJS: this,
+            ...params,
+            ...this.callbacks.run.params,
+            Filter: this,
             ...response,
         });
         return response;
@@ -238,22 +242,23 @@ export default class Filter extends Class {
         limit: {
             function: function (params) { /* console.log(params.result) */ },
             params: {},
-    }, next: {
+        }, next: {
             function: function (params) { /* console.log(params.result) */ },
             params: {},
-    }, order: {
+        }, order: {
             function: function (params) { /* console.log(params.result) */ },
             params: {},
-    }, paginate: {
+        }, paginate: {
             function: function (params) { /* console.log(params.result) */ },
             params: {},
-    }, reset: {
+        }, reset: {
             function: function (params) { /* console.log(params.filterJS.result) */ },
             params: {},
-    }, run: {
+       }, run: {
             function: function (params) { /* console.log(params.filterJS.result) */ },
             params: {},
-    }}
+        },
+    }
 
     // ? Filter childs
     static Input = Input;
